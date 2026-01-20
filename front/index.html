@@ -11,8 +11,14 @@
   <!-- Fix plein écran + neutralise le CSS Vite par défaut (#root max-width, body flex, etc.) -->
   <style>
     html, body, #root { height: 100%; width: 100%; }
-    body { margin: 0; display: block; }
+    body { margin: 0; background: #fafafa; color: #18181b; }
     #root { max-width: none; margin: 0; padding: 0; }
+
+    /* Neutralise les styles globaux "template" (boutons, liens, etc.) */
+    button, input, textarea, select {
+      font: inherit;
+      color: inherit;
+    }
   </style>
 
   <title>front</title>
