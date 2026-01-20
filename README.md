@@ -1,4 +1,3 @@
-
 ## Organisation du projet
 
 Ce dépôt suit une organisation simple :
@@ -6,7 +5,8 @@ Ce dépôt suit une organisation simple :
 - `backend/` : API **AdonisJS** (Node.js)
 - `frontend/` : application **React** (interface utilisateur)
 
-L’objectif est de fournir une application web de gestion d’objectifs et d’habitudes (objectifs + étapes, habitudes + suivi/streaks), avec une mise en place DevOps complète (Docker, CI/CD, GitHub Projects).
+L’objectif est de fournir une application web de gestion d’objectifs et d’habitudes (objectifs + étapes, habitudes +
+suivi/streaks), avec une mise en place DevOps complète (Docker, CI/CD, GitHub Projects).
 
 ---
 
@@ -22,6 +22,7 @@ Le projet respecte un workflow inspiré de **GitFlow** :
 - `hotfix/*` : correctifs urgents sur `main` (optionnel)
 
 Règles :
+
 - Les développements se font sur des branches `feature/*` à partir de `develop`.
 - Les Pull Requests ciblent `develop`.
 - Une fois stable, `develop` est fusionnée dans `main` pour livrer une version.
@@ -31,7 +32,8 @@ Règles :
 ## GitHub Projects (Kanban)
 
 La gestion des tâches se fait via **GitHub Projects** en mode Kanban :
-- Backlog → Ready → In Progress → In Review → Done
+
+- Backlog → Todo → In Progress → Done
 
 Chaque issue correspond à une tâche, groupée par Epics (Foundations, Goals, Habits, Dashboard, Quality).
 
