@@ -41,10 +41,19 @@ export function useAuth() {
         setUser(data.user);
     }, []);
 
+    const updateProfile = useCallback(
+        async (payload: { fullName?: string; email?: string }) => {
+            const { data } = await api.put("/me", payload);
+            setUser(data); // met à jour l’état local
+            return data;
+        },
+        []
+    );
+
     const logout = useCallback(() => {
         localStorage.removeItem("access_token");
         setUser(null);
     }, []);
 
-    return { user, loading, login, register, logout, reload: loadMe };
+    return { user, loading, login, register, logout, reload: loadMe, updateProfile };
 }

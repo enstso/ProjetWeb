@@ -17,8 +17,8 @@ export function Card({
             : "border-zinc-200 bg-white";
 
     // un petit polish sympa (sans être agressif)
-    const polish =
-        "hover:shadow-md focus-within:ring-2 focus-within:ring-zinc-900/10";
+    const polish = "hover:shadow-md focus-within:ring-2 focus-within:ring-zinc-900/10";
+
 
     return <div className={[base, styles, polish, className].join(" ")} {...props} />;
 }
