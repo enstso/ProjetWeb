@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useState } from "react";
-import { api } from "../lib/api";
+import {useCallback, useMemo, useState} from "react";
+import {api} from "../lib/api";
 
 export type Goal = {
     id: number;
@@ -18,6 +18,7 @@ export type Goal = {
 function getStartDate(g: any) {
     return g.startDate ?? g.start_date ?? "";
 }
+
 function getDeadline(g: any) {
     return g.deadline ?? "";
 }
@@ -35,7 +36,7 @@ export function useGoals() {
         setLoading(true);
         setError(null);
         try {
-            const { data } = await api.get("/goals", { params });
+            const {data} = await api.get("/goals", {params});
             setItems(Array.isArray(data) ? data : []);
         } catch (e: any) {
             setError(e?.response?.data?.message ?? "Impossible de charger les objectifs.");
@@ -45,7 +46,7 @@ export function useGoals() {
     }, []);
 
     const getGoal = useCallback(async (id: string | number) => {
-        const { data } = await api.get(`/goals/${id}`);
+        const {data} = await api.get(`/goals/${id}`);
         return data as Goal;
     }, []);
 
@@ -58,7 +59,7 @@ export function useGoals() {
         start_date: string; // YYYY-MM-DD
         deadline: string;   // YYYY-MM-DD
     }) => {
-        const { data } = await api.post("/goals", payload);
+        const {data} = await api.post("/goals", payload);
         return data as Goal;
     }, []);
 
@@ -71,7 +72,7 @@ export function useGoals() {
         start_date: string;
         deadline: string;
     }>) => {
-        const { data } = await api.put(`/goals/${id}`, payload);
+        const {data} = await api.put(`/goals/${id}`, payload);
         return data as Goal;
     }, []);
 
@@ -80,11 +81,33 @@ export function useGoals() {
     }, []);
 
     const completeGoal = useCallback(async (id: string | number) => {
-        const { data } = await api.patch(`/goals/${id}/complete`);
+        const {data} = await api.patch(`/goals/${id}/complete`);
         return data as Goal;
     }, []);
 
-    const helpers = useMemo(() => ({ getStartDate, getDeadline }), []);
+    const getProgress = useCallback(async (id: string | number) => {
+        const {data} = await api.get(`/goals/${id}/progress`);
+        console.log("ddsd",data)
+        return data as {
+            goal_id: number;
+            total_steps: number;
+            completed_steps: number;
+            progress_percent: number;
+        };
+    }, []);
+    const helpers = useMemo(() => ({getStartDate, getDeadline}), []);
 
-    return { items, loading, error, fetchGoals, getGoal, createGoal, updateGoal, deleteGoal, completeGoal, helpers };
+    return {
+        items,
+        loading,
+        error,
+        fetchGoals,
+        getGoal,
+        createGoal,
+        updateGoal,
+        deleteGoal,
+        completeGoal,
+        helpers,
+        getProgress
+    };
 }
