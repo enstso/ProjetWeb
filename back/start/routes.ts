@@ -12,6 +12,7 @@ import {middleware} from "#start/kernel";
 import AuthController from "#controllers/auth_controller";
 import UsersController from "#controllers/users_controller";
 import GoalsController from "#controllers/goals_controller";
+import StepsController from "#controllers/steps_controller";
 
 router.get('/', async () => {
   return {
@@ -34,3 +35,11 @@ router.group(()=>{
   router.delete('/goals/:id',[GoalsController,'destroy']).use(middleware.auth())
   router.patch('/goals/:id/complete',[GoalsController,'complete']).use(middleware.auth())
 });
+
+router.group(() => {
+  router.get('/goals/:id/steps',[StepsController,'index'] ).use(middleware.auth())
+  router.post('/goals/:id/steps', [StepsController,'store']).use(middleware.auth())
+  router.put('/steps/:id', [StepsController,'update']).use(middleware.auth())
+  router.delete('/steps/:id',[StepsController,'destroy'] ).use(middleware.auth())
+  router.patch('/steps/:id/complete',[StepsController,'complete'] ).use(middleware.auth())
+})
