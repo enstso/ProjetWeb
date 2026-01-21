@@ -10,6 +10,7 @@ import GoalForm from "./pages/goals/GoalForm.tsx";
 import GoalsList from "./pages/goals/GoalsList.tsx";
 import HabitsList from "./pages/habits/HabitsList";
 import HabitForm from "./pages/habits/HabitForm";
+import HabitDetail from "./pages/habits/HabitDetail.tsx";
 
 export default function App() {
     return (
@@ -84,6 +85,15 @@ export default function App() {
                 <ProtectedRoute>
                     <HabitForm/>
                 </ProtectedRoute>}/>
+
+            <Route
+                path="/habits/:id"
+                element={
+                    <ProtectedRoute>
+                        <HabitDetail/>
+                    </ProtectedRoute>
+                }
+            />
         </Routes>
     );
 }
