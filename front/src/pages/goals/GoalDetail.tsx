@@ -1,13 +1,14 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
-import { useGoals, type Goal } from "../../hooks/useGoals";
+import {useEffect, useState} from "react";
+import {Link, useNavigate, useParams} from "react-router-dom";
+import {Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter} from "../../components/ui/Card";
+import {Button} from "../../components/ui/Button";
+import {useGoals, type Goal} from "../../hooks/useGoals";
+import {StepsPanel} from "../../components/steps/StepsPanel";
 
 export default function GoalDetail() {
-    const { id } = useParams();
+    const {id} = useParams();
     const nav = useNavigate();
-    const { getGoal, deleteGoal, completeGoal, helpers } = useGoals();
+    const {getGoal, deleteGoal, completeGoal, helpers} = useGoals();
 
     const [goal, setGoal] = useState<Goal | null>(null);
     const [loading, setLoading] = useState(true);
@@ -89,11 +90,13 @@ export default function GoalDetail() {
                                 Marquer comme complété
                             </Button>
                         ) : (
-                            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                            <div
+                                className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
                                 Objectif complété ✅
                             </div>
                         )}
                     </CardContent>
+                    <StepsPanel goalId={goal.id}/>
 
                     <CardFooter className="justify-between flex-wrap gap-2">
                         <Link to="/goals">
