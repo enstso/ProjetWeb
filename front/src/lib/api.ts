@@ -6,6 +6,9 @@ export const api = axios.create({
 
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem("access_token");
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    config.headers = config.headers ?? {};
+    config.headers["X-Timezone"] = tz;
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
 });
