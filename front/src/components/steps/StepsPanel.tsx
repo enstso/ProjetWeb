@@ -5,7 +5,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui
 import { useSteps, type Step } from "../../hooks/useSteps";
 
 export function StepsPanel({ goalId }: { goalId: string | number }) {
-    const { loading, error, listSteps, addStep, updateStep, deleteStep, completeStep, isDone } = useSteps();
+    // ✅ plus besoin de completeStep
+    const { loading, error, listSteps, addStep, updateStep, deleteStep, isDone } = useSteps();
 
     const [steps, setSteps] = useState<Step[]>([]);
     const [newTitle, setNewTitle] = useState("");
@@ -58,9 +59,15 @@ export function StepsPanel({ goalId }: { goalId: string | number }) {
         setEditId(null);
     }
 
-    async function onComplete(id: number) {
-        const updated = await completeStep(id);
-        setSteps((prev) => prev.map((s) => (s.id === id ? updated : s)));
+    // ✅ TOGGLE completed (check/uncheck)
+    async function onToggleCompleted(step: Step) {
+        const done = isDone(step);
+
+        const updated = await updateStep(step.id, {
+            is_completed: !done,
+        });
+
+        setSteps((prev) => prev.map((s) => (s.id === step.id ? updated : s)));
     }
 
     async function onDelete(id: number) {
@@ -98,11 +105,20 @@ export function StepsPanel({ goalId }: { goalId: string | number }) {
                                 {isEditing ? (
                                     <div className="space-y-3">
                                         <Input label="Titre" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
-                                        <Input label="Deadline (optionnel)" type="date" value={editDeadline} onChange={(e) => setEditDeadline(e.target.value)} />
+                                        <Input
+                                            label="Deadline (optionnel)"
+                                            type="date"
+                                            value={editDeadline}
+                                            onChange={(e) => setEditDeadline(e.target.value)}
+                                        />
 
                                         <div className="flex gap-2">
-                                            <Button className="w-full" onClick={onSaveEdit}>Enregistrer</Button>
-                                            <Button variant="secondary" className="w-full" onClick={() => setEditId(null)}>Annuler</Button>
+                                            <Button className="w-full" onClick={onSaveEdit}>
+                                                Enregistrer
+                                            </Button>
+                                            <Button variant="secondary" className="w-full" onClick={() => setEditId(null)}>
+                                                Annuler
+                                            </Button>
                                         </div>
                                     </div>
                                 ) : (
@@ -117,18 +133,27 @@ export function StepsPanel({ goalId }: { goalId: string | number }) {
                                         </div>
 
                                         <div className="flex shrink-0 gap-2">
-                                            {!done ? (
-                                                <Button variant="secondary" onClick={() => onComplete(s.id)}>
-                                                    ✓
-                                                </Button>
-                                            ) : (
-                                                <span className="rounded-xl border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800">
-                          OK
-                        </span>
-                                            )}
+                                            {/* ✅ Toggle button */}
+                                            <button
+                                                type="button"
+                                                onClick={() => onToggleCompleted(s)}
+                                                className={[
+                                                    "h-9 w-9 rounded-xl border text-sm font-semibold transition",
+                                                    done
+                                                        ? "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                                                        : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
+                                                ].join(" ")}
+                                                title={done ? "Décocher" : "Cocher"}
+                                            >
+                                                {done ? "✓" : "○"}
+                                            </button>
 
-                                            <Button variant="secondary" onClick={() => startEdit(s)}>✎</Button>
-                                            <Button variant="secondary" onClick={() => onDelete(s.id)}>🗑</Button>
+                                            <Button variant="secondary" onClick={() => startEdit(s)}>
+                                                ✎
+                                            </Button>
+                                            <Button variant="secondary" onClick={() => onDelete(s.id)}>
+                                                🗑
+                                            </Button>
                                         </div>
                                     </div>
                                 )}
@@ -143,8 +168,18 @@ export function StepsPanel({ goalId }: { goalId: string | number }) {
 
                 {/* Ajout */}
                 <form onSubmit={onAdd} className="space-y-3 rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4">
-                    <Input label="Nouvelle étape" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Ex: Faire la migration DB" />
-                    <Input label="Deadline (optionnel)" type="date" value={newDeadline} onChange={(e) => setNewDeadline(e.target.value)} />
+                    <Input
+                        label="Nouvelle étape"
+                        value={newTitle}
+                        onChange={(e) => setNewTitle(e.target.value)}
+                        placeholder="Ex: Faire la migration DB"
+                    />
+                    <Input
+                        label="Deadline (optionnel)"
+                        type="date"
+                        value={newDeadline}
+                        onChange={(e) => setNewDeadline(e.target.value)}
+                    />
                     <Button disabled={loading} className="w-full">
                         {loading ? "Ajout..." : "Ajouter l’étape"}
                     </Button>
