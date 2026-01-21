@@ -1,5 +1,5 @@
-import { useCallback, useState } from "react";
-import { api } from "../lib/api";
+import {useCallback, useState} from "react";
+import {api} from "../lib/api";
 
 export type Step = {
     id: number;
@@ -22,7 +22,7 @@ export function useSteps() {
         setLoading(true);
         setError(null);
         try {
-            const { data } = await api.get(`/goals/${goalId}/steps`);
+            const {data} = await api.get(`/goals/${goalId}/steps`);
             return Array.isArray(data) ? (data as Step[]) : [];
         } catch (e: any) {
             setError(e?.response?.data?.message ?? "Impossible de charger les étapes.");
@@ -32,24 +32,34 @@ export function useSteps() {
         }
     }, []);
 
-    const addStep = useCallback(async (goalId: string | number, payload: { title: string; deadline?: string; order?: number }) => {
-        const { data } = await api.post(`/goals/${goalId}/steps`, payload);
+    const addStep = useCallback(async (goalId: string | number, payload: {
+        title: string;
+        deadline?: string;
+        order?: number
+    }) => {
+        const {data} = await api.post(`/goals/${goalId}/steps`, payload);
         return data as Step;
     }, []);
 
-    const updateStep = useCallback(async (stepId: string | number, payload: Partial<{ title: string; deadline?: string; order?: number }>) => {
-        const { data } = await api.put(`/steps/${stepId}`, payload);
-        return data as Step;
-    }, []);
+    const updateStep = useCallback(
+        async (
+            stepId: string | number,
+            payload: Partial<{ title: string; deadline?: string; order?: number; is_completed: boolean }>
+        ) => {
+            const {data} = await api.put(`/steps/${stepId}`, payload);
+            return data as Step;
+        },
+        []
+    );
 
     const deleteStep = useCallback(async (stepId: string | number) => {
         await api.delete(`/steps/${stepId}`);
     }, []);
 
     const completeStep = useCallback(async (stepId: string | number) => {
-        const { data } = await api.patch(`/steps/${stepId}/complete`);
+        const {data} = await api.patch(`/steps/${stepId}/complete`);
         return data as Step;
     }, []);
 
-    return { loading, error, listSteps, addStep, updateStep, deleteStep, completeStep, isDone };
+    return {loading, error, listSteps, addStep, updateStep, deleteStep, completeStep, isDone};
 }
