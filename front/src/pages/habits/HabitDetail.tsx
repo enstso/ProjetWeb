@@ -1,21 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
-import { ProgressBar } from "../../components/ui/ProgressBar";
-import { useHabits, type Habit } from "../../hooks/useHabits";
+import {useEffect, useMemo, useState} from "react";
+import {Link, useNavigate, useParams} from "react-router-dom";
+import {Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter} from "../../components/ui/Card";
+import {Button} from "../../components/ui/Button";
+import {ProgressBar} from "../../components/ui/ProgressBar";
+import {useHabits, type Habit} from "../../hooks/useHabits";
+import {HabitTrackingGrid} from "../../components/habits/HabitTrackingGrid";
 
 function getWeeklyTarget(h: Habit) {
     return (h.weekly_target ?? h.weeklyTarget ?? null) as number | null;
 }
+
 function getStartDate(h: Habit) {
     return (h.start_date ?? h.startDate ?? "—") as string;
 }
 
 export default function HabitDetail() {
-    const { id } = useParams();
+    const {id} = useParams();
     const nav = useNavigate();
-    const { getOne, getStats, archive, checkToday, uncheck } = useHabits();
+    const {getOne, getStats, archive, checkToday, uncheck} = useHabits();
 
     const [habit, setHabit] = useState<Habit | null>(null);
     const [stats, setStats] = useState<{
@@ -118,7 +120,8 @@ export default function HabitDetail() {
                     <CardHeader>
                         <CardTitle className="flex items-start justify-between gap-3">
                             <span className="truncate">{habit.name}</span>
-                            <span className="shrink-0 rounded-xl border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-700">
+                            <span
+                                className="shrink-0 rounded-xl border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-700">
                 {freqLabel}
               </span>
                         </CardTitle>
@@ -146,9 +149,10 @@ export default function HabitDetail() {
 
                         {/* Progress bar (taux) */}
                         <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-                            <ProgressBar value={stats?.rate ?? 0} />
+                            <ProgressBar value={stats?.rate ?? 0}/>
                             <p className="mt-2 text-xs text-zinc-500">
-                                Aujourd’hui (timezone) : <span className="font-medium text-zinc-800">{stats?.today ?? "—"}</span>
+                                Aujourd’hui (timezone) : <span
+                                className="font-medium text-zinc-800">{stats?.today ?? "—"}</span>
                             </p>
                         </div>
 
@@ -161,6 +165,7 @@ export default function HabitDetail() {
                                     : "Check aujourd’hui"}
                         </Button>
                     </CardContent>
+                    <HabitTrackingGrid habitId={habit.id}/>
 
                     <CardFooter className="justify-between flex-wrap gap-2">
                         <Link to="/habits">

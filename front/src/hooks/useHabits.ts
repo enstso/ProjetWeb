@@ -84,6 +84,10 @@ export function useHabits() {
         };
     }, []);
 
+    const getLogs = useCallback(async (habitId: string | number, start_date: string, end_date: string) => {
+        const {data} = await api.get(`/habits/${habitId}/logs`, {params: {start_date, end_date}});
+        return Array.isArray(data) ? data : [];
+    }, []);
 
-    return {loading, error, listActive, getOne, create, update, archive, checkToday, uncheck, getStats};
+    return {loading, error, listActive, getOne, create, update, archive, checkToday, uncheck, getStats, getLogs};
 }
