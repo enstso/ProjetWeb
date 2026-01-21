@@ -59,5 +59,15 @@ export function useHabits() {
         return data as Habit;
     }, []);
 
-    return { loading, error, listActive, getOne, create, update, archive };
+    const checkToday = useCallback(async (habitId: string | number) => {
+        const { data } = await api.post(`/habits/${habitId}/log`);
+        return data as { id: number; date_iso: string; already_exists: boolean };
+    }, []);
+
+    const uncheck = useCallback(async (habitId: string | number, dateISO: string) => {
+        await api.delete(`/habits/${habitId}/log/${dateISO}`);
+    }, []);
+
+
+    return { loading, error, listActive, getOne, create, update, archive,checkToday,uncheck };
 }
