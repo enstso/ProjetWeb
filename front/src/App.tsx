@@ -5,6 +5,9 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Profile from "./pages/Profile.tsx";
+import GoalDetail from "./pages/goals/GoalDetail.tsx";
+import GoalForm from "./pages/goals/GoalForm.tsx";
+import GoalsList from "./pages/goals/GoalsList.tsx";
 
 export default function App() {
     return (
@@ -22,11 +25,48 @@ export default function App() {
                     </ProtectedRoute>
                 }
             />
+
             <Route
                 path="/profile"
                 element={
                     <ProtectedRoute>
                         <Profile />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/goals"
+                element={
+                    <ProtectedRoute>
+                        <GoalsList />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/goals/new"
+                element={
+                    <ProtectedRoute>
+                        <GoalForm />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/goals/:id"
+                element={
+                    <ProtectedRoute>
+                        <GoalDetail />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/goals/:id/edit"
+                element={
+                    <ProtectedRoute>
+                        <GoalForm />
                     </ProtectedRoute>
                 }
             />
