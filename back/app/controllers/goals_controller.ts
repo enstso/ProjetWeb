@@ -2,11 +2,9 @@ import type {HttpContext} from '@adonisjs/core/http'
 import {DateTime} from 'luxon'
 import Goal from '#models/goal'
 import {createGoalValidator, updateGoalValidator} from '#validators/goal'
+import db from "@adonisjs/lucid/services/db";
 
 export default class GoalsController {
-
-  constructor() {}
-
 
   /**
    * GET /goals?status=active&priority=high&order=asc|desc
@@ -163,5 +161,41 @@ export default class GoalsController {
     await goal.save()
 
     return goal
+  }
+
+  /**
+   * GET /goals/:id/progress
+   * AC: 0% si aucune étape
+   * progression = steps complétées / total
+   */
+  async progress({ auth, params, response }: HttpContext) {
+    const user = auth.getUserOrFail()
+
+    const goal = await Goal.query()
+        .where('id', params.id)
+        .where('user_id', user.id)
+        .first()
+
+    if (!goal) return response.notFound({ message: 'Goal introuvable' })
+
+    const totalRow = await db.from('steps').where('goal_id', goal.id).count('* as total').first()
+    const doneRow = await db
+        .from('steps')
+        .where('goal_id', goal.id)
+        .where('is_completed', true)
+        .count('* as done')
+        .first()
+
+    const total = Number(totalRow?.total ?? 0)
+    const done = Number(doneRow?.done ?? 0)
+
+    const progress = total === 0 ? 0 : Math.round((done / total) * 100)
+
+    return response.ok({
+      goal_id: goal.id,
+      total_steps: total,
+      completed_steps: done,
+      progress_percent: progress,
+    })
   }
 }
