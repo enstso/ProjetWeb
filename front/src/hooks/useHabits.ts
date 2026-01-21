@@ -1,5 +1,5 @@
-import { useCallback, useState } from "react";
-import { api } from "../lib/api";
+import {useCallback, useState} from "react";
+import {api} from "../lib/api";
 
 export type Habit = {
     id: number;
@@ -20,9 +20,10 @@ export function useHabits() {
     const [error, setError] = useState<string | null>(null);
 
     const listActive = useCallback(async () => {
-        setLoading(true); setError(null);
+        setLoading(true);
+        setError(null);
         try {
-            const { data } = await api.get("/habits");
+            const {data} = await api.get("/habits");
             return Array.isArray(data) ? (data as Habit[]) : [];
         } catch (e: any) {
             setError(e?.response?.data?.message ?? "Impossible de charger les habitudes.");
@@ -33,7 +34,7 @@ export function useHabits() {
     }, []);
 
     const getOne = useCallback(async (id: string | number) => {
-        const { data } = await api.get(`/habits/${id}`);
+        const {data} = await api.get(`/habits/${id}`);
         return data as Habit;
     }, []);
 
@@ -45,22 +46,22 @@ export function useHabits() {
         weekly_target?: number;
         start_date: string;
     }) => {
-        const { data } = await api.post("/habits", payload);
+        const {data} = await api.post("/habits", payload);
         return data as Habit;
     }, []);
 
     const update = useCallback(async (id: string | number, payload: any) => {
-        const { data } = await api.put(`/habits/${id}`, payload);
+        const {data} = await api.put(`/habits/${id}`, payload);
         return data as Habit;
     }, []);
 
     const archive = useCallback(async (id: string | number) => {
-        const { data } = await api.patch(`/habits/${id}/archive`);
+        const {data} = await api.patch(`/habits/${id}/archive`);
         return data as Habit;
     }, []);
 
     const checkToday = useCallback(async (habitId: string | number) => {
-        const { data } = await api.post(`/habits/${habitId}/log`);
+        const {data} = await api.post(`/habits/${habitId}/log`);
         return data as { id: number; date_iso: string; already_exists: boolean };
     }, []);
 
@@ -68,6 +69,21 @@ export function useHabits() {
         await api.delete(`/habits/${habitId}/log/${dateISO}`);
     }, []);
 
+    const getStats = useCallback(async (id: string | number) => {
+        const {data} = await api.get(`/habits/${id}/stats`);
+        return data as {
+            habit_id: number;
+            frequency: "daily" | "weekly";
+            weekly_target?: number | null;
+            today: string;
+            stats: {
+                current_streak: number;
+                best_streak: number;
+                completion_rate_percent: number;
+            };
+        };
+    }, []);
 
-    return { loading, error, listActive, getOne, create, update, archive,checkToday,uncheck };
+
+    return {loading, error, listActive, getOne, create, update, archive, checkToday, uncheck, getStats};
 }
