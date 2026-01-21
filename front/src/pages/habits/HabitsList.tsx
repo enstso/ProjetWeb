@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
-import { useHabits, type Habit } from "../../hooks/useHabits";
+import {useEffect, useMemo, useState} from "react";
+import {Link, useNavigate} from "react-router-dom";
+import {Card, CardHeader, CardTitle, CardDescription, CardContent} from "../../components/ui/Card";
+import {Button} from "../../components/ui/Button";
+import {useHabits, type Habit} from "../../hooks/useHabits";
 
 function weeklyTarget(h: Habit) {
     return (h.weekly_target ?? h.weeklyTarget ?? null) as number | null;
@@ -14,7 +14,8 @@ function badgeText(h: Habit) {
 }
 
 export default function HabitsList() {
-    const { loading, error, listActive, archive } = useHabits();
+    const navigate = useNavigate();
+    const {loading, error, listActive, archive} = useHabits();
     const [items, setItems] = useState<Habit[]>([]);
     const [busyId, setBusyId] = useState<number | null>(null);
 
@@ -57,7 +58,9 @@ export default function HabitsList() {
 
                 {/* Error */}
                 {error ? (
-                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {error}
+                    </div>
                 ) : null}
 
                 {/* Empty */}
@@ -81,7 +84,16 @@ export default function HabitsList() {
                 ) : (
                     <div className="grid grid-cols-1 gap-3">
                         {items.map((h) => (
-                            <Card key={h.id} className="overflow-hidden">
+                            <Card
+                                key={h.id}
+                                className="overflow-hidden cursor-pointer hover:shadow-md"
+                                onClick={() => navigate(`/habits/${h.id}`)} // ✅ clique => HabitDetail
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") navigate(`/habits/${h.id}`);
+                                }}
+                            >
                                 <CardHeader>
                                     <CardTitle className="flex items-start justify-between gap-3">
                                         <div className="min-w-0">
@@ -91,7 +103,8 @@ export default function HabitsList() {
                                             </p>
                                         </div>
 
-                                        <span className="shrink-0 rounded-xl border border-zinc-200 bg-white px-2.5 py-1 text-xs font-semibold text-zinc-700">
+                                        <span
+                                            className="shrink-0 rounded-xl border border-zinc-200 bg-white px-2.5 py-1 text-xs font-semibold text-zinc-700">
                       {badgeText(h)}
                     </span>
                                     </CardTitle>
@@ -104,7 +117,12 @@ export default function HabitsList() {
                                 </CardHeader>
 
                                 <CardContent className="flex flex-col gap-2 md:flex-row">
-                                    <Link to={`/habits/${h.id}/edit`} className="w-full">
+                                    {/* ✅ Stop propagation pour ne pas déclencher la navigation */}
+                                    <Link
+                                        to={`/habits/${h.id}/edit`}
+                                        className="w-full"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
                                         <Button variant="secondary" className="w-full">
                                             Modifier
                                         </Button>
@@ -113,7 +131,10 @@ export default function HabitsList() {
                                     <Button
                                         variant="secondary"
                                         className="w-full"
-                                        onClick={() => onArchive(h)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onArchive(h);
+                                        }}
                                         disabled={busyId === h.id}
                                     >
                                         {busyId === h.id ? "Archivage..." : "Archiver"}
