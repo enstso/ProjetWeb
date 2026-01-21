@@ -42,4 +42,5 @@ router.group(() => {
   router.put('/steps/:id', [StepsController,'update']).use(middleware.auth())
   router.delete('/steps/:id',[StepsController,'destroy'] ).use(middleware.auth())
   router.patch('/steps/:id/complete',[StepsController,'complete'] ).use(middleware.auth())
+  router.get('/goals/:id/progress',[GoalsController,'progress']).use(middleware.auth());
 })
