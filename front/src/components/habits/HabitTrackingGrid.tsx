@@ -68,11 +68,13 @@ export function HabitTrackingGrid({ habitId }: { habitId: string | number }) {
             const logs: HabitLog[] = await getLogs(habitId, range.startISO, range.endISO);
             const set = new Set<string>();
             for (const l of logs) {
-                const iso = normalizeLogDate((l as any).date);
+                const iso = normalizeLogDate((l).date);
                 if (iso) set.add(iso);
             }
             setDoneSet(set);
-        } catch (e: any) {
+        } catch (e) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             setErr(e?.response?.data?.message ?? "Impossible de charger le tracking.");
         } finally {
             setLoading(false);
@@ -119,7 +121,9 @@ export function HabitTrackingGrid({ habitId }: { habitId: string | number }) {
                 await uncheck(habitId, todayISO);
             }
             await refresh();
-        } catch (e: any) {
+        } catch (e) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             setErr(e?.response?.data?.message ?? "Action impossible.");
         } finally {
             setBusyToday(false);

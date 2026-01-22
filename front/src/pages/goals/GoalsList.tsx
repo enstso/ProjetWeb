@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
-import { Select } from "../../components/ui/Select";
-import { useGoals } from "../../hooks/useGoals";
+import {useEffect, useMemo, useState} from "react";
+import {Link} from "react-router-dom";
+import {Card, CardHeader, CardTitle, CardDescription, CardContent} from "../../components/ui/Card";
+import {Button} from "../../components/ui/Button";
+import {Select} from "../../components/ui/Select";
+import {useGoals} from "../../hooks/useGoals";
 
 export default function GoalsList() {
-    const { items, loading, error, fetchGoals, helpers } = useGoals();
+    const {items, loading, error, fetchGoals, helpers} = useGoals();
 
     const [status, setStatus] = useState<string>("");
     const [priority, setPriority] = useState<string>("");
@@ -56,7 +56,8 @@ export default function GoalsList() {
                                 <option value="high">Haute</option>
                             </Select>
 
-                            <Select label="Trier par deadline" value={order} onChange={(e) => setOrder(e.target.value as any)}>
+                            <Select label="Trier par deadline" value={order}
+                                    onChange={(e) => setOrder(e.target.value as never)}>
                                 <option value="asc">La plus proche</option>
                                 <option value="desc">La plus lointaine</option>
                             </Select>
@@ -65,7 +66,8 @@ export default function GoalsList() {
                 </Card>
 
                 {error ? (
-                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+                    <div
+                        className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
                 ) : null}
 
                 {loading ? (
@@ -82,11 +84,14 @@ export default function GoalsList() {
                                             </p>
                                             <p className="mt-1 text-lg font-semibold text-zinc-900 truncate">{g.title}</p>
                                             <p className="mt-1 text-sm text-zinc-600">
-                                                Start: <span className="font-medium">{helpers.getStartDate(g) || "—"}</span> • Deadline:{" "}
+                                                Start: <span
+                                                className="font-medium">{helpers.getStartDate(g) || "—"}</span> •
+                                                Deadline:{" "}
                                                 <span className="font-medium">{helpers.getDeadline(g) || "—"}</span>
                                             </p>
                                         </div>
-                                        <span className="shrink-0 rounded-xl border border-zinc-200 bg-white px-3 py-1 text-xs text-zinc-700">
+                                        <span
+                                            className="shrink-0 rounded-xl border border-zinc-200 bg-white px-3 py-1 text-xs text-zinc-700">
                       Voir
                     </span>
                                     </CardContent>

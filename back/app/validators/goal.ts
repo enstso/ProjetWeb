@@ -7,8 +7,8 @@ export const createGoalValidator = vine.compile(
     category: vine.string().trim().optional(),
     priority: vine.enum(['low', 'medium', 'high']).optional(),
     status: vine.enum(['active', 'completed', 'abandoned']).optional(),
-    start_date: vine.string().trim(),  // format YYYY-MM-DD
-    deadline: vine.string().trim(),    // format YYYY-MM-DD
+    start_date: vine.string().trim(), // format YYYY-MM-DD
+    deadline: vine.string().trim(), // format YYYY-MM-DD
   })
 )
 

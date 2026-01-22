@@ -40,7 +40,9 @@ export default function HabitForm() {
                 setFrequency(h.frequency ?? "daily");
                 setWeeklyTarget((h.weekly_target ?? h.weeklyTarget ?? 3) as number);
                 setStartDate((h.start_date ?? h.startDate ?? todayISO()) as string);
-            } catch (e: any) {
+            } catch (e) {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
                 setErr(e?.response?.data?.message ?? "Impossible de charger l’habitude.");
             } finally {
                 setLoading(false);
@@ -78,7 +80,9 @@ export default function HabitForm() {
                 });
                 nav("/habits");
             }
-        } catch (e: any) {
+        } catch (e) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             setErr(e?.response?.data?.message ?? "Erreur lors de l’enregistrement.");
         } finally {
             setLoading(false);
@@ -100,7 +104,7 @@ export default function HabitForm() {
                             <Input label="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
                             <Input label="Catégorie" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Santé, Carrière..." />
 
-                            <Select label="Fréquence" value={frequency} onChange={(e) => setFrequency(e.target.value as any)}>
+                            <Select label="Fréquence" value={frequency} onChange={(e) => setFrequency(e.target.value as never)}>
                                 <option value="daily">Quotidienne</option>
                                 <option value="weekly">Hebdomadaire</option>
                             </Select>

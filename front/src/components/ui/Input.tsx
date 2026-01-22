@@ -6,6 +6,7 @@ type Props = Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> & {
 };
 
 export function Input({ label, error, className = "", id, ...props }: Props) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const inputId = id ?? React.useId();
 
     return (

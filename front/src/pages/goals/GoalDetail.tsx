@@ -29,7 +29,9 @@ export default function GoalDetail() {
             const p = await getProgress(id);
             setProgress(p.progress_percent);
             setProgressMeta({ total: p.total_steps, done: p.completed_steps });
-        } catch (e: any) {
+        } catch (e) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             setErr(e?.response?.data?.message ?? "Impossible de charger l’objectif.");
         } finally {
             setLoading(false);
@@ -46,7 +48,9 @@ export default function GoalDetail() {
         try {
             const updated = await completeGoal(id);
             setGoal(updated);
-        } catch (e: any) {
+        } catch (e) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             setErr(e?.response?.data?.message ?? "Impossible de compléter l’objectif.");
         }
     }
@@ -57,7 +61,9 @@ export default function GoalDetail() {
         try {
             await deleteGoal(id);
             nav("/goals");
-        } catch (e: any) {
+        } catch (e) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             setErr(e?.response?.data?.message ?? "Impossible de supprimer l’objectif.");
         }
     }

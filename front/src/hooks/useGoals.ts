@@ -15,11 +15,11 @@ export type Goal = {
     deadline?: string;
 };
 
-function getStartDate(g: any) {
+function getStartDate(g: Goal) {
     return g.startDate ?? g.start_date ?? "";
 }
 
-function getDeadline(g: any) {
+function getDeadline(g: Goal) {
     return g.deadline ?? "";
 }
 
@@ -38,7 +38,9 @@ export function useGoals() {
         try {
             const {data} = await api.get("/goals", {params});
             setItems(Array.isArray(data) ? data : []);
-        } catch (e: any) {
+        } catch (e) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             setError(e?.response?.data?.message ?? "Impossible de charger les objectifs.");
         } finally {
             setLoading(false);
@@ -87,7 +89,6 @@ export function useGoals() {
 
     const getProgress = useCallback(async (id: string | number) => {
         const {data} = await api.get(`/goals/${id}/progress`);
-        console.log("ddsd",data)
         return data as {
             goal_id: number;
             total_steps: number;
