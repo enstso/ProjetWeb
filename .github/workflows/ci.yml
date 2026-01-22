@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   backend:
-    name: Backend (lint, test, build)
+    name: Backend (lint, migrate, test, build)
     runs-on: ubuntu-latest
 
     services:
@@ -39,6 +39,19 @@ jobs:
       run:
         working-directory: back
 
+    # ✅ IMPORTANT: variables requises par start/env.ts
+    env:
+      NODE_ENV: test
+      PORT: 3333
+      HOST: 0.0.0.0
+      LOG_LEVEL: info
+      APP_KEY: ${{ secrets.APP_KEY }}
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_USER: habituser
+      DB_PASSWORD: habitpass
+      DB_DATABASE: habitdb
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -59,36 +72,16 @@ jobs:
         run: npm run lint
 
       - name: Run migrations
-        env:
-          NODE_ENV: test
-          # Adonis (PG) — adapte si tes noms diffèrent
-          DB_CONNECTION: pg
-          PG_HOST: 127.0.0.1
-          PG_PORT: 5432
-          PG_USER: habituser
-          PG_PASSWORD: habitpass
-          PG_DB_NAME: habitdb
-          # requis Adonis
-          APP_KEY: ${{ secrets.APP_KEY || '0123456789abcdef0123456789abcdef' }}
         run: node ace migration:run --force
 
       - name: Tests
-        env:
-          NODE_ENV: test
-          DB_CONNECTION: pg
-          PG_HOST: 127.0.0.1
-          PG_PORT: 5432
-          PG_USER: habituser
-          PG_PASSWORD: habitpass
-          PG_DB_NAME: habitdb
-          APP_KEY: ${{ secrets.APP_KEY || '0123456789abcdef0123456789abcdef' }}
         run: node ace test
 
       - name: Build
         run: npm run build
 
   frontend:
-    name: Frontend (lint, test, build)
+    name: Frontend (lint, build)
     runs-on: ubuntu-latest
 
     defaults:
