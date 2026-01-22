@@ -1,11 +1,10 @@
-import type {HttpContext} from '@adonisjs/core/http'
-import {DateTime} from 'luxon'
+import type { HttpContext } from '@adonisjs/core/http'
+import { DateTime } from 'luxon'
 import Goal from '#models/goal'
-import {createGoalValidator, updateGoalValidator} from '#validators/goal'
-import db from "@adonisjs/lucid/services/db";
+import { createGoalValidator, updateGoalValidator } from '#validators/goal'
+import db from '@adonisjs/lucid/services/db'
 
 export default class GoalsController {
-
   /**
    * GET /goals?status=active&priority=high&order=asc|desc
    * AC: lister + filtrer (statut/priorité) + trier deadline
@@ -13,8 +12,8 @@ export default class GoalsController {
   async index({ auth, request }: HttpContext) {
     const user = auth.getUserOrFail()
 
-    const status = request.input('status') as ('active'|'completed'|'abandoned'|undefined)
-    const priority = request.input('priority') as ('low'|'medium'|'high'|undefined)
+    const status = request.input('status') as 'active' | 'completed' | 'abandoned' | undefined
+    const priority = request.input('priority') as 'low' | 'medium' | 'high' | undefined
     const order = (request.input('order') ?? 'asc') === 'desc' ? 'desc' : 'asc'
 
     const query = Goal.query().where('user_id', user.id)
@@ -27,22 +26,21 @@ export default class GoalsController {
     return query
   }
 
-
   /**
    * POST /goals
    * AC: créer objectif (title obligatoire, priority/status/category, start_date, deadline)
    */
-  async store({auth, request, response}: HttpContext) {
+  async store({ auth, request, response }: HttpContext) {
     const user = auth.getUserOrFail()
     const payload = await request.validateUsing(createGoalValidator)
 
     const start = DateTime.fromISO(payload.start_date)
     const end = DateTime.fromISO(payload.deadline)
     if (!start.isValid || !end.isValid) {
-      return response.badRequest({message: 'Dates invalides (format attendu: YYYY-MM-DD)'})
+      return response.badRequest({ message: 'Dates invalides (format attendu: YYYY-MM-DD)' })
     }
     if (end < start) {
-      return response.badRequest({message: 'La deadline doit être >= start_date'})
+      return response.badRequest({ message: 'La deadline doit être >= start_date' })
     }
 
     const goal = await Goal.create({
@@ -63,15 +61,12 @@ export default class GoalsController {
   /**
    * GET /goals/:id
    */
-  async show({auth, params, response}: HttpContext) {
+  async show({ auth, params, response }: HttpContext) {
     const user = auth.getUserOrFail()
 
-    const goal = await Goal.query()
-      .where('id', params.id)
-      .where('user_id', user.id)
-      .first()
+    const goal = await Goal.query().where('id', params.id).where('user_id', user.id).first()
 
-    if (!goal) return response.notFound({message: 'Goal introuvable'})
+    if (!goal) return response.notFound({ message: 'Goal introuvable' })
     return goal
   }
 
@@ -79,15 +74,12 @@ export default class GoalsController {
    * PUT /goals/:id
    * AC: update
    */
-  async update({auth, params, request, response}: HttpContext) {
+  async update({ auth, params, request, response }: HttpContext) {
     const user = auth.getUserOrFail()
 
-    const goal = await Goal.query()
-      .where('id', params.id)
-      .where('user_id', user.id)
-      .first()
+    const goal = await Goal.query().where('id', params.id).where('user_id', user.id).first()
 
-    if (!goal) return response.notFound({message: 'Goal introuvable'})
+    if (!goal) return response.notFound({ message: 'Goal introuvable' })
 
     const payload = await request.validateUsing(updateGoalValidator)
 
@@ -103,10 +95,10 @@ export default class GoalsController {
     const end = payload.deadline ? DateTime.fromISO(payload.deadline) : goal.deadline
 
     if (!start.isValid || !end.isValid) {
-      return response.badRequest({message: 'Dates invalides (format attendu: YYYY-MM-DD)'})
+      return response.badRequest({ message: 'Dates invalides (format attendu: YYYY-MM-DD)' })
     }
     if (end < start) {
-      return response.badRequest({message: 'La deadline doit être >= start_date'})
+      return response.badRequest({ message: 'La deadline doit être >= start_date' })
     }
 
     goal.startDate = start
@@ -128,15 +120,12 @@ export default class GoalsController {
    * DELETE /goals/:id
    * AC: delete
    */
-  async destroy({auth, params, response}: HttpContext) {
+  async destroy({ auth, params, response }: HttpContext) {
     const user = auth.getUserOrFail()
 
-    const goal = await Goal.query()
-      .where('id', params.id)
-      .where('user_id', user.id)
-      .first()
+    const goal = await Goal.query().where('id', params.id).where('user_id', user.id).first()
 
-    if (!goal) return response.notFound({message: 'Goal introuvable'})
+    if (!goal) return response.notFound({ message: 'Goal introuvable' })
 
     await goal.delete()
     return response.noContent()
@@ -146,15 +135,12 @@ export default class GoalsController {
    * PATCH /goals/:id/complete
    * AC: patch complete (status=completed)
    */
-  async complete({auth, params, response}: HttpContext) {
+  async complete({ auth, params, response }: HttpContext) {
     const user = auth.getUserOrFail()
 
-    const goal = await Goal.query()
-      .where('id', params.id)
-      .where('user_id', user.id)
-      .first()
+    const goal = await Goal.query().where('id', params.id).where('user_id', user.id).first()
 
-    if (!goal) return response.notFound({message: 'Goal introuvable'})
+    if (!goal) return response.notFound({ message: 'Goal introuvable' })
 
     goal.status = 'completed'
     goal.completedAt = DateTime.utc()
@@ -171,20 +157,17 @@ export default class GoalsController {
   async progress({ auth, params, response }: HttpContext) {
     const user = auth.getUserOrFail()
 
-    const goal = await Goal.query()
-        .where('id', params.id)
-        .where('user_id', user.id)
-        .first()
+    const goal = await Goal.query().where('id', params.id).where('user_id', user.id).first()
 
     if (!goal) return response.notFound({ message: 'Goal introuvable' })
 
     const totalRow = await db.from('steps').where('goal_id', goal.id).count('* as total').first()
     const doneRow = await db
-        .from('steps')
-        .where('goal_id', goal.id)
-        .where('is_completed', true)
-        .count('* as done')
-        .first()
+      .from('steps')
+      .where('goal_id', goal.id)
+      .where('is_completed', true)
+      .count('* as done')
+      .first()
 
     const total = Number(totalRow?.total ?? 0)
     const done = Number(doneRow?.done ?? 0)

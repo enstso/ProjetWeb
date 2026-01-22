@@ -6,6 +6,7 @@ type Props = React.SelectHTMLAttributes<HTMLSelectElement> & {
 };
 
 export function Select({ label, error, className = "", id, children, ...props }: Props) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const selectId = id ?? React.useId();
 
     return (

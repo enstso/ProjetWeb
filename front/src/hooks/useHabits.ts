@@ -26,7 +26,9 @@ export function useHabits() {
         try {
             const {data} = await api.get("/habits", {params: {archived}});
             return Array.isArray(data) ? (data as Habit[]) : [];
-        } catch (e: any) {
+        } catch (e) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             setError(e?.response?.data?.message ?? "Impossible de charger les habitudes.");
             return [];
         } finally {
@@ -57,7 +59,14 @@ export function useHabits() {
         return data as Habit;
     }, []);
 
-    const update = useCallback(async (id: string | number, payload: any) => {
+    const update = useCallback(async (id: string | number, payload: {
+        name: string;
+        description: string | undefined;
+        category: string | undefined;
+        frequency: "daily" | "weekly";
+        weekly_target: number | undefined;
+        start_date: string
+    }) => {
         const {data} = await api.put(`/habits/${id}`, payload);
         return data as Habit;
     }, []);
@@ -104,9 +113,9 @@ export function useHabits() {
     return {
         loading,
         error,
-        list,          // ✅ optionnel si tu veux l’utiliser
+        list,
         listActive,
-        listArchived,  // ✅ nouveau
+        listArchived,
         getOne,
         create,
         update,

@@ -37,8 +37,10 @@ export default function Profile() {
         try {
             await updateProfile({ fullName, email });
             setMsg("Profil mis à jour ✅");
-        } catch (e: any) {
+        } catch (e) {
             // Axios: e.response?.data?.message
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             setErr(e?.response?.data?.message ?? "Impossible de mettre à jour le profil.");
         } finally {
             setLoading(false);

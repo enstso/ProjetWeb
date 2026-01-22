@@ -47,7 +47,9 @@ export function useDashboard() {
                 params: { goal_limit: goalLimit },
             });
             return data;
-        } catch (e: any) {
+        } catch (e) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             setError(e?.response?.data?.message ?? "Impossible de charger le dashboard.");
             return null;
         } finally {

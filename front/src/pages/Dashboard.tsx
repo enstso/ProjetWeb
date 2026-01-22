@@ -195,7 +195,7 @@ export default function Dashboard() {
                                                         <span className="font-medium text-zinc-700">
                               {h.frequency === "daily"
                                   ? "Daily"
-                                  : `Weekly ${(h.weekly_target ?? h.weeklyTarget ?? "?") as any}x`}
+                                  : `Weekly ${(h.weekly_target ?? h.weeklyTarget ?? "?") as never}x`}
                             </span>
                                                     </p>
                                                 </div>

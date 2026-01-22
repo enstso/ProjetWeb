@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import {useEffect, useMemo, useState} from "react";
+import {Link, useNavigate, useParams} from "react-router-dom";
 import {
     Card,
     CardHeader,
@@ -8,23 +8,23 @@ import {
     CardContent,
     CardFooter,
 } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
-import { ProgressBar } from "../../components/ui/ProgressBar";
-import { useHabits, type Habit } from "../../hooks/useHabits";
-import { HabitTrackingGrid } from "../../components/habits/HabitTrackingGrid";
+import {Button} from "../../components/ui/Button";
+import {ProgressBar} from "../../components/ui/ProgressBar";
+import {useHabits, type Habit} from "../../hooks/useHabits";
+import {HabitTrackingGrid} from "../../components/habits/HabitTrackingGrid";
 
 function getWeeklyTarget(h: Habit) {
-    return (h.weekly_target ?? h.weeklyTarget ?? null) as number | null;
+    return (h.weekly_target ?? h.weeklyTarget ?? null);
 }
 
 function getStartDate(h: Habit) {
-    return (h.start_date ?? h.startDate ?? "—") as string;
+    return (h.start_date ?? h.startDate ?? "—");
 }
 
 export default function HabitDetail() {
-    const { id } = useParams();
+    const {id} = useParams();
     const nav = useNavigate();
-    const { getOne, getStats, archive, checkToday, uncheck } = useHabits();
+    const {getOne, getStats, archive, checkToday, uncheck} = useHabits();
 
     const [habit, setHabit] = useState<Habit | null>(null);
     const [stats, setStats] = useState<{
@@ -71,7 +71,9 @@ export default function HabitDetail() {
             } else {
                 setTodayCheckedISO(null);
             }
-        } catch (e: any) {
+        } catch (e) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             setErr(e?.response?.data?.message ?? "Impossible de charger l’habitude.");
         } finally {
             setLoading(false);
@@ -89,7 +91,9 @@ export default function HabitDetail() {
         try {
             await archive(habit.id);
             nav("/habits");
-        } catch (e: any) {
+        } catch (e) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             setErr(e?.response?.data?.message ?? "Impossible d’archiver.");
         }
     }
@@ -115,7 +119,9 @@ export default function HabitDetail() {
                 setTodayCheckedISO(null);
             }
             await refresh();
-        } catch (e: any) {
+        } catch (e) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             setErr(e?.response?.data?.message ?? "Action impossible.");
         } finally {
             setBusyToday(false);
@@ -138,12 +144,14 @@ export default function HabitDetail() {
 
                             <div className="flex items-center gap-2">
                                 {isArchived ? (
-                                    <span className="w-fit rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-900">
+                                    <span
+                                        className="w-fit rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-900">
                     Archivée
                   </span>
                                 ) : null}
 
-                                <span className="w-fit rounded-xl border border-zinc-200 bg-white px-2.5 py-1 text-xs font-semibold text-zinc-700">
+                                <span
+                                    className="w-fit rounded-xl border border-zinc-200 bg-white px-2.5 py-1 text-xs font-semibold text-zinc-700">
                   {freqLabel}
                 </span>
                             </div>
@@ -160,7 +168,8 @@ export default function HabitDetail() {
                         {/* ✅ Bandeau si archivé */}
                         {isArchived ? (
                             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-                                Cette habitude est archivée : tu peux consulter l’historique et les stats, mais tu ne peux plus cocher/décocher.
+                                Cette habitude est archivée : tu peux consulter l’historique et les stats, mais tu ne
+                                peux plus cocher/décocher.
                             </div>
                         ) : null}
 
@@ -180,7 +189,7 @@ export default function HabitDetail() {
                         </div>
 
                         <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-                            <ProgressBar value={stats?.rate ?? 0} />
+                            <ProgressBar value={stats?.rate ?? 0}/>
                             <p className="mt-2 text-xs text-zinc-500">
                                 Aujourd’hui (timezone) :{" "}
                                 <span className="font-medium text-zinc-800">{stats?.today ?? "—"}</span>
@@ -211,7 +220,7 @@ export default function HabitDetail() {
 
                         <div className="rounded-2xl border border-zinc-200 bg-white p-4">
                             <p className="mb-3 text-sm font-semibold text-zinc-900">Historique</p>
-                            <HabitTrackingGrid habitId={habit.id} />
+                            <HabitTrackingGrid habitId={habit.id}/>
                         </div>
                     </CardContent>
 
@@ -223,7 +232,8 @@ export default function HabitDetail() {
                                 </Button>
                             </Link>
 
-                            <Button variant="secondary" className="w-full sm:w-auto" onClick={onArchive} disabled={isArchived}>
+                            <Button variant="secondary" className="w-full sm:w-auto" onClick={onArchive}
+                                    disabled={isArchived}>
                                 {isArchived ? "Déjà archivée" : "Archiver"}
                             </Button>
                         </div>

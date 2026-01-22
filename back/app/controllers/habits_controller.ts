@@ -125,10 +125,7 @@ export default class HabitsController {
   async unarchive({ auth, params, response }: HttpContext) {
     const user = auth.getUserOrFail()
 
-    const habit = await Habit.query()
-      .where('id', params.id)
-      .where('user_id', user.id)
-      .first()
+    const habit = await Habit.query().where('id', params.id).where('user_id', user.id).first()
 
     if (!habit) return response.notFound({ message: 'Habitude introuvable' })
 
@@ -172,9 +169,9 @@ export default class HabitsController {
     const allDates = allLogs.map((l) => l.date.toISODate()!)
     const allDatesSet = new Set(allDates)
 
-    let currentStreak = 0
-    let bestStreak = 0
-    let completionRate = 0
+    let currentStreak: number
+    let bestStreak: number
+    let completionRate: number
 
     if (habit.frequency === 'daily') {
       // ✅ current streak doit inclure aujourd’hui

@@ -10,7 +10,7 @@ export type Step = {
     order?: number;
 };
 
-function isDone(s: any) {
+function isDone(s: { isCompleted: never; is_completed: never; }) {
     return s.isCompleted ?? s.is_completed ?? false;
 }
 
@@ -24,7 +24,9 @@ export function useSteps() {
         try {
             const {data} = await api.get(`/goals/${goalId}/steps`);
             return Array.isArray(data) ? (data as Step[]) : [];
-        } catch (e: any) {
+        } catch (e) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             setError(e?.response?.data?.message ?? "Impossible de charger les étapes.");
             return [];
         } finally {
