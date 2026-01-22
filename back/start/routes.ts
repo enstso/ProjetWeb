@@ -9,6 +9,7 @@
 
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
+const DashboardController = () => import('#controllers/dashboard_controller')
 const HabitLogsController = () => import('#controllers/habit_logs_controller')
 
 const AuthController = () => import('#controllers/auth_controller')
@@ -62,3 +63,5 @@ router.group(() => {
 })
 router.post('/habits/:id/logs', [HabitLogsController, 'index'])
 router.get('/habits/:id/stats', [HabitsController, 'stats']).use(middleware.auth())
+
+router.get('/dashboard', [DashboardController, 'show']).use([middleware.auth()])
