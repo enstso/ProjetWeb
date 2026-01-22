@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
-import { useHabits, type Habit } from "../../hooks/useHabits";
+import {useEffect, useMemo, useState} from "react";
+import {Link, useNavigate} from "react-router-dom";
+import {Card, CardHeader, CardTitle, CardDescription, CardContent} from "../../components/ui/Card";
+import {Button} from "../../components/ui/Button";
+import {useHabits, type Habit} from "../../hooks/useHabits";
 
 function weeklyTarget(h: Habit) {
     return (h.weekly_target ?? h.weeklyTarget ?? null) as number | null;
@@ -17,7 +17,7 @@ export default function HabitsList() {
     const navigate = useNavigate();
 
     // ✅ IMPORTANT: il faut que ton hook expose listArchived()
-    const { loading, error, listActive, listArchived, archive } = useHabits();
+    const {loading, error, listActive, listArchived, archive, unarchive} = useHabits();
 
     const [items, setItems] = useState<Habit[]>([]);
     const [busyId, setBusyId] = useState<number | null>(null);
@@ -42,6 +42,17 @@ export default function HabitsList() {
         setBusyId(habit.id);
         try {
             await archive(habit.id);
+            await refresh();
+        } finally {
+            setBusyId(null);
+        }
+    }
+
+    async function onRestore(habit: Habit) {
+        if (!confirm(`Restaurer "${habit.name}" ?`)) return;
+        setBusyId(habit.id);
+        try {
+            await unarchive(habit.id);
             await refresh();
         } finally {
             setBusyId(null);
@@ -137,7 +148,6 @@ export default function HabitsList() {
                                 key={h.id}
                                 className="cursor-pointer overflow-hidden hover:shadow-md"
                                 onClick={() => navigate(`/habits/${h.id}`)}
-                                role="button"
                                 tabIndex={0}
                                 onKeyDown={(e) => {
                                     if (e.key === "Enter" || e.key === " ") navigate(`/habits/${h.id}`);
@@ -152,7 +162,8 @@ export default function HabitsList() {
                                             </p>
                                         </div>
 
-                                        <span className="shrink-0 rounded-xl border border-zinc-200 bg-white px-2.5 py-1 text-xs font-semibold text-zinc-700">
+                                        <span
+                                            className="shrink-0 rounded-xl border border-zinc-200 bg-white px-2.5 py-1 text-xs font-semibold text-zinc-700">
                       {badgeText(h)}
                     </span>
                                     </CardTitle>
@@ -165,8 +176,7 @@ export default function HabitsList() {
                                 </CardHeader>
 
                                 {/* Actions responsive */}
-                                <CardContent className="flex flex-col gap-2 sm:flex-row">
-                                    {/* stopPropagation = ne pas déclencher la navigation */}
+                                <CardContent className="flex flex-col gap-2 md:flex-row">
                                     <Link
                                         to={`/habits/${h.id}/edit`}
                                         className="w-full"
@@ -177,7 +187,6 @@ export default function HabitsList() {
                                         </Button>
                                     </Link>
 
-                                    {/* ✅ Archiver seulement dans l’onglet Actives */}
                                     {tab === "active" ? (
                                         <Button
                                             variant="secondary"
@@ -190,7 +199,19 @@ export default function HabitsList() {
                                         >
                                             {busyId === h.id ? "Archivage..." : "Archiver"}
                                         </Button>
-                                    ) : null}
+                                    ) : (
+                                        <Button
+                                            variant="secondary"
+                                            className="w-full"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onRestore(h);
+                                            }}
+                                            disabled={busyId === h.id}
+                                        >
+                                            {busyId === h.id ? "Restauration..." : "Restaurer"}
+                                        </Button>
+                                    )}
                                 </CardContent>
                             </Card>
                         ))}
