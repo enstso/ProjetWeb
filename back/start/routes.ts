@@ -63,5 +63,4 @@ router.group(() => {
 })
 router.post('/habits/:id/logs', [HabitLogsController, 'index'])
 router.get('/habits/:id/stats', [HabitsController, 'stats']).use(middleware.auth())
-
 router.get('/dashboard', [DashboardController, 'show']).use([middleware.auth()])

@@ -1,28 +1,59 @@
 import { DateTime } from 'luxon'
 
+/**
+ * Utilitaires dates (ISO date only)
+ */
+function isoDay(iso: string) {
+  return DateTime.fromISO(iso).startOf('day')
+}
+
+function isoKey(dt: DateTime) {
+  return dt.toISODate()!
+}
+
+function weekKeyFromDT(dt: DateTime) {
+  return `${dt.weekYear}-W${String(dt.weekNumber).padStart(2, '0')}`
+}
+
+/**
+ * Daily — current streak
+ * Règle : streak actif uniquement si today est coché.
+ */
 export function calcCurrentDailyStreak(todayISO: string, doneDates: Set<string>) {
-  if (!doneDates.has(todayISO)) return 0
+  const today = isoKey(isoDay(todayISO))
+  if (!doneDates.has(today)) return 0
+
   let streak = 0
-  let cursor = DateTime.fromISO(todayISO)
-  while (doneDates.has(cursor.toISODate()!)) {
+  let cursor = isoDay(today)
+
+  while (doneDates.has(isoKey(cursor))) {
     streak++
     cursor = cursor.minus({ days: 1 })
   }
   return streak
 }
 
+/**
+ * Daily — best streak
+ * Entrée attendue : dates uniques triées ASC (YYYY-MM-DD).
+ * Si tu n'es pas sûr d'avoir des dates uniques, on peut les dédupliquer ici.
+ */
 export function calcBestDailyStreak(sortedDatesAsc: string[]) {
   if (sortedDatesAsc.length === 0) return 0
 
+  // ✅ sécurité : dédoublonnage + normalisation
+  const dates = Array.from(new Set(sortedDatesAsc.map((d) => d.slice(0, 10)))).sort()
+
+  if (dates.length === 0) return 0
   let best = 1
   let current = 1
 
-  for (let i = 1; i < sortedDatesAsc.length; i++) {
-    const prev = DateTime.fromISO(sortedDatesAsc[i - 1])
-    const cur = DateTime.fromISO(sortedDatesAsc[i])
-    const diff = cur.diff(prev, 'days').days
+  for (let i = 1; i < dates.length; i++) {
+    const prev = isoDay(dates[i - 1])
+    const cur = isoDay(dates[i])
 
-    if (diff === 1) {
+    // ✅ évite les flottants : on compare au jour suivant exact
+    if (prev.plus({ days: 1 }).toISODate() === cur.toISODate()) {
       current++
       if (current > best) best = current
     } else {
@@ -33,25 +64,34 @@ export function calcBestDailyStreak(sortedDatesAsc: string[]) {
 }
 
 function weekStartFromISO(isoDate: string, zone: string) {
-  // On force l’ISO week (lundi = début)
-  const dt = DateTime.fromISO(isoDate, { zone })
+  // ISO week (lundi = début)
+  const dt = DateTime.fromISO(isoDate, { zone }).startOf('day')
   return DateTime.fromObject(
     { weekYear: dt.weekYear, weekNumber: dt.weekNumber, weekday: 1 },
     { zone }
   ).startOf('day')
 }
 
+/**
+ * Weekly — map semaine ISO => count
+ * Entrée : dates ISO (YYYY-MM-DD). (Si doublons : on peut dédupliquer.)
+ */
 export function calcWeeklySuccessMap(dates: string[], zone: string) {
-  // map key = "YYYY-Www" => count
   const map = new Map<string, number>()
-  for (const iso of dates) {
-    const dt = DateTime.fromISO(iso, { zone })
-    const key = `${dt.weekYear}-W${String(dt.weekNumber).padStart(2, '0')}`
+  const uniq = Array.from(new Set(dates.map((d) => d.slice(0, 10))))
+
+  for (const iso of uniq) {
+    const dt = DateTime.fromISO(iso, { zone }).startOf('day')
+    const key = weekKeyFromDT(dt)
     map.set(key, (map.get(key) ?? 0) + 1)
   }
   return map
 }
 
+/**
+ * Weekly — current streak
+ * Règle : streak actif seulement si la semaine courante >= weeklyTarget
+ */
 export function calcCurrentWeeklyStreak(
   todayISO: string,
   zone: string,
@@ -59,16 +99,16 @@ export function calcCurrentWeeklyStreak(
   weekCounts: Map<string, number>
 ) {
   const start = weekStartFromISO(todayISO, zone)
-  const curKey = `${start.weekYear}-W${String(start.weekNumber).padStart(2, '0')}`
+  const curKey = weekKeyFromDT(start)
   const curCount = weekCounts.get(curKey) ?? 0
 
-  // streak actif uniquement si semaine en cours >= target
   if (curCount < weeklyTarget) return 0
 
   let streak = 0
   let cursor = start
+
   while (true) {
-    const key = `${cursor.weekYear}-W${String(cursor.weekNumber).padStart(2, '0')}`
+    const key = weekKeyFromDT(cursor)
     const count = weekCounts.get(key) ?? 0
     if (count >= weeklyTarget) {
       streak++
@@ -77,21 +117,27 @@ export function calcCurrentWeeklyStreak(
     }
     break
   }
+
   return streak
 }
 
+/**
+ * Weekly — best streak
+ * On transforme les semaines success en startOfWeek, on trie et on compte les runs.
+ */
 export function calcBestWeeklyStreak(
   zone: string,
   weeklyTarget: number,
   weekCounts: Map<string, number>
 ) {
-  // On transforme les semaines "success" en dates de startOfWeek pour trier & détecter les runs
   const successStarts: DateTime[] = []
+
   for (const [key, count] of weekCounts.entries()) {
     if (count < weeklyTarget) continue
     const [wy, wn] = key.split('-W')
     const weekYear = Number(wy)
     const weekNumber = Number(wn)
+
     const start = DateTime.fromObject({ weekYear, weekNumber, weekday: 1 }, { zone }).startOf('day')
     successStarts.push(start)
   }
@@ -105,29 +151,33 @@ export function calcBestWeeklyStreak(
   for (let i = 1; i < successStarts.length; i++) {
     const prev = successStarts[i - 1]
     const cur = successStarts[i]
-    const diffWeeks = cur.diff(prev, 'weeks').weeks
 
-    if (diffWeeks === 1) {
+    // ✅ évite diff('weeks') flottant : compare au +1 week exact
+    if (prev.plus({ weeks: 1 }).toISODate() === cur.toISODate()) {
       current++
       if (current > best) best = current
     } else {
       current = 1
     }
   }
+
   return best
 }
 
 export function calcCompletionRateDaily(startISO: string, endISO: string, doneCount: number) {
-  const start = DateTime.fromISO(startISO).startOf('day')
-  const end = DateTime.fromISO(endISO).startOf('day')
+  const start = isoDay(startISO)
+  const end = isoDay(endISO)
+
   const days = Math.floor(end.diff(start, 'days').days) + 1
   if (days <= 0) return 0
+
   return Math.round((doneCount / days) * 100)
 }
 
 export function countWeeksInclusive(startISO: string, endISO: string, zone: string) {
   const start = weekStartFromISO(startISO, zone)
   const end = weekStartFromISO(endISO, zone)
+
   const weeks = Math.floor(end.diff(start, 'weeks').weeks) + 1
   return Math.max(0, weeks)
 }
@@ -142,5 +192,6 @@ export function calcCompletionRateWeekly(
   const weeks = countWeeksInclusive(startISO, endISO, zone)
   const expected = weeks * weeklyTarget
   if (expected <= 0) return 0
+
   return Math.round((doneCount / expected) * 100)
 }
