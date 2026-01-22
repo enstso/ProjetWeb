@@ -6,7 +6,7 @@ import { useSteps, type Step } from "../../hooks/useSteps";
 import { useToast } from "../ui/Toast";
 import { pickMotivation } from "../../utils/motivation";
 
-export function StepsPanel({ goalId }: { goalId: string | number }) {
+export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
     const { loading, error, listSteps, addStep, updateStep, deleteStep, isDone } = useSteps();
 
     const [steps, setSteps] = useState<Step[]>([]);
@@ -70,7 +70,7 @@ export function StepsPanel({ goalId }: { goalId: string | number }) {
     function startEdit(s: Step) {
         setEditId(s.id);
         setEditTitle(s.title ?? "");
-        setEditDeadline((s.deadline ?? "") as string);
+        setEditDeadline((s.deadline ?? ""));
     }
 
     async function onSaveEdit() {
