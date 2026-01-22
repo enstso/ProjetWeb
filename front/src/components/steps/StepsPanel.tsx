@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/Card";
 import { useSteps, type Step } from "../../hooks/useSteps";
+import { useToast } from "../ui/Toast";
+import { pickMotivation } from "../../utils/motivation";
 
 export function StepsPanel({ goalId }: { goalId: string | number }) {
-    // ✅ plus besoin de completeStep
     const { loading, error, listSteps, addStep, updateStep, deleteStep, isDone } = useSteps();
 
     const [steps, setSteps] = useState<Step[]>([]);
@@ -16,9 +17,21 @@ export function StepsPanel({ goalId }: { goalId: string | number }) {
     const [editTitle, setEditTitle] = useState("");
     const [editDeadline, setEditDeadline] = useState("");
 
+    const [busyStepId, setBusyStepId] = useState<number | null>(null);
+
+    const { push } = useToast();
+
     async function refresh() {
-        const data = await listSteps(goalId);
-        setSteps(data);
+        try {
+            const data = await listSteps(goalId);
+            setSteps(data);
+        } catch {
+            push({
+                type: "error",
+                title: "Oups",
+                message: "Impossible de charger les étapes.",
+            });
+        }
     }
 
     useEffect(() => {
@@ -30,14 +43,28 @@ export function StepsPanel({ goalId }: { goalId: string | number }) {
         e.preventDefault();
         if (!newTitle.trim()) return;
 
-        const created = await addStep(goalId, {
-            title: newTitle.trim(),
-            deadline: newDeadline || undefined,
-        });
+        try {
+            const created = await addStep(goalId, {
+                title: newTitle.trim(),
+                deadline: newDeadline || undefined,
+            });
 
-        setSteps((prev) => [...prev, created]);
-        setNewTitle("");
-        setNewDeadline("");
+            setSteps((prev) => [...prev, created]);
+            setNewTitle("");
+            setNewDeadline("");
+
+            push({
+                type: "success",
+                title: "Étape ajoutée ✨",
+                message: "Nickel ! Une étape de plus vers ton objectif.",
+            });
+        } catch {
+            push({
+                type: "error",
+                title: "Oups",
+                message: "Impossible d’ajouter l’étape. Réessaie.",
+            });
+        }
     }
 
     function startEdit(s: Step) {
@@ -50,30 +77,89 @@ export function StepsPanel({ goalId }: { goalId: string | number }) {
         if (!editId) return;
         if (!editTitle.trim()) return;
 
-        const updated = await updateStep(editId, {
-            title: editTitle.trim(),
-            deadline: editDeadline || undefined,
-        });
+        setBusyStepId(editId);
+        try {
+            const updated = await updateStep(editId, {
+                title: editTitle.trim(),
+                deadline: editDeadline || undefined,
+            });
 
-        setSteps((prev) => prev.map((s) => (s.id === editId ? updated : s)));
-        setEditId(null);
+            setSteps((prev) => prev.map((s) => (s.id === editId ? updated : s)));
+            setEditId(null);
+
+            push({
+                type: "success",
+                title: "Modifications enregistrées ✅",
+                message: "Parfait, c’est à jour.",
+            });
+        } catch {
+            push({
+                type: "error",
+                title: "Oups",
+                message: "Impossible d’enregistrer. Réessaie.",
+            });
+        } finally {
+            setBusyStepId(null);
+        }
     }
 
-    // ✅ TOGGLE completed (check/uncheck)
     async function onToggleCompleted(step: Step) {
         const done = isDone(step);
+        setBusyStepId(step.id);
 
-        const updated = await updateStep(step.id, {
-            is_completed: !done,
-        });
+        try {
+            const updated = await updateStep(step.id, {
+                is_completed: !done,
+            });
 
-        setSteps((prev) => prev.map((s) => (s.id === step.id ? updated : s)));
+            setSteps((prev) => prev.map((s) => (s.id === step.id ? updated : s)));
+
+            if (!done) {
+                push({
+                    type: "success",
+                    title: "Étape complétée ✅",
+                    message: pickMotivation(),
+                });
+            } else {
+                push({
+                    type: "info",
+                    title: "Étape décochée",
+                    message: "Pas grave — tu peux la re-cocher quand tu veux 🙂",
+                });
+            }
+        } catch {
+            push({
+                type: "error",
+                title: "Oups",
+                message: "Impossible de mettre à jour cette étape. Réessaie.",
+            });
+        } finally {
+            setBusyStepId(null);
+        }
     }
 
     async function onDelete(id: number) {
         if (!confirm("Supprimer cette étape ?")) return;
-        await deleteStep(id);
-        setSteps((prev) => prev.filter((s) => s.id !== id));
+
+        setBusyStepId(id);
+        try {
+            await deleteStep(id);
+            setSteps((prev) => prev.filter((s) => s.id !== id));
+
+            push({
+                type: "success",
+                title: "Étape supprimée",
+                message: "Ok — on reste focus sur l’essentiel 💡",
+            });
+        } catch {
+            push({
+                type: "error",
+                title: "Oups",
+                message: "Impossible de supprimer. Réessaie.",
+            });
+        } finally {
+            setBusyStepId(null);
+        }
     }
 
     const doneCount = steps.filter((s) => isDone(s)).length;
@@ -99,9 +185,17 @@ export function StepsPanel({ goalId }: { goalId: string | number }) {
                     {steps.map((s) => {
                         const done = isDone(s);
                         const isEditing = editId === s.id;
+                        const busy = busyStepId === s.id;
 
                         return (
-                            <div key={s.id} className="rounded-2xl border border-zinc-200 bg-white p-3">
+                            <div
+                                key={s.id}
+                                className={[
+                                    "rounded-2xl border p-3 transition",
+                                    done ? "border-emerald-200 bg-emerald-50/60" : "border-zinc-200 bg-white",
+                                    busy ? "opacity-70" : "",
+                                ].join(" ")}
+                            >
                                 {isEditing ? (
                                     <div className="space-y-3">
                                         <Input label="Titre" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
@@ -113,10 +207,15 @@ export function StepsPanel({ goalId }: { goalId: string | number }) {
                                         />
 
                                         <div className="flex gap-2">
-                                            <Button className="w-full" onClick={onSaveEdit}>
+                                            <Button className="w-full" onClick={onSaveEdit} disabled={busyStepId === editId}>
                                                 Enregistrer
                                             </Button>
-                                            <Button variant="secondary" className="w-full" onClick={() => setEditId(null)}>
+                                            <Button
+                                                variant="secondary"
+                                                className="w-full"
+                                                onClick={() => setEditId(null)}
+                                                disabled={busyStepId === editId}
+                                            >
                                                 Annuler
                                             </Button>
                                         </div>
@@ -133,12 +232,14 @@ export function StepsPanel({ goalId }: { goalId: string | number }) {
                                         </div>
 
                                         <div className="flex shrink-0 gap-2">
-                                            {/* ✅ Toggle button */}
+                                            {/* Toggle */}
                                             <button
                                                 type="button"
+                                                disabled={busy}
                                                 onClick={() => onToggleCompleted(s)}
                                                 className={[
                                                     "h-9 w-9 rounded-xl border text-sm font-semibold transition",
+                                                    busy ? "pointer-events-none opacity-70" : "",
                                                     done
                                                         ? "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
                                                         : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
@@ -148,10 +249,10 @@ export function StepsPanel({ goalId }: { goalId: string | number }) {
                                                 {done ? "✓" : "○"}
                                             </button>
 
-                                            <Button variant="secondary" onClick={() => startEdit(s)}>
+                                            <Button variant="secondary" onClick={() => startEdit(s)} disabled={busy}>
                                                 ✎
                                             </Button>
-                                            <Button variant="secondary" onClick={() => onDelete(s.id)}>
+                                            <Button variant="secondary" onClick={() => onDelete(s.id)} disabled={busy}>
                                                 🗑
                                             </Button>
                                         </div>
