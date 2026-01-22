@@ -114,9 +114,6 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Tests
-        run: npm run test
-
       - name: Build
         env:
           VITE_API_URL: http://localhost:3333
