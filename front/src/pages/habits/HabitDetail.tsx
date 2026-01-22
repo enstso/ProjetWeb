@@ -72,7 +72,7 @@ export default function HabitDetail() {
     }
 
     useEffect(() => {
-        refresh();
+        refresh().then();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
