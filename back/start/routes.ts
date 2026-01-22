@@ -9,6 +9,7 @@
 
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
+
 const DashboardController = () => import('#controllers/dashboard_controller')
 const HabitLogsController = () => import('#controllers/habit_logs_controller')
 
@@ -55,6 +56,7 @@ router.group(() => {
   router.get('/habits/:id', [HabitsController, 'show']).use(middleware.auth()) // (utile pour edit)
   router.put('/habits/:id', [HabitsController, 'update']).use(middleware.auth()) // edit
   router.patch('/habits/:id/archive', [HabitsController, 'archive']).use(middleware.auth()) // archiver
+  router.patch('/habits/:id/unarchive', [HabitsController, 'unarchive']).use(middleware.auth()) // unarchiver
 })
 router.get('/habits/:id/logs', [HabitLogsController, 'index']).use(middleware.auth())
 router.group(() => {
