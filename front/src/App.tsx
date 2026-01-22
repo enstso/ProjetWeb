@@ -11,6 +11,7 @@ import GoalsList from "./pages/goals/GoalsList.tsx";
 import HabitsList from "./pages/habits/HabitsList";
 import HabitForm from "./pages/habits/HabitForm";
 import HabitDetail from "./pages/habits/HabitDetail.tsx";
+import {AppLayout} from "./components/layout/AppLayout.tsx";
 
 export default function App() {
     return (
@@ -19,83 +20,93 @@ export default function App() {
             <Route path="/login" element={<Login/>}/>
             <Route path="/register" element={<Register/>}/>
 
-            {/* /dashboard enveloppé par <ProtectedRoute> */}
+            {/* Protected + Layout */}
             <Route
-                path="/dashboard"
                 element={
                     <ProtectedRoute>
-                        <Dashboard/>
+                        <AppLayout/>
                     </ProtectedRoute>
                 }
-            />
+            >
+                {/* /dashboard enveloppé par <ProtectedRoute> */}
+                <Route
+                    path="/dashboard"
+                    element={
+                        <ProtectedRoute>
+                            <Dashboard/>
+                        </ProtectedRoute>
+                    }
+                />
 
-            <Route
-                path="/profile"
-                element={
-                    <ProtectedRoute>
-                        <Profile/>
-                    </ProtectedRoute>
-                }
-            />
+                <Route
+                    path="/profile"
+                    element={
+                        <ProtectedRoute>
+                            <Profile/>
+                        </ProtectedRoute>
+                    }
+                />
 
-            <Route
-                path="/goals"
-                element={
-                    <ProtectedRoute>
-                        <GoalsList/>
-                    </ProtectedRoute>
-                }
-            />
+                <Route
+                    path="/goals"
+                    element={
+                        <ProtectedRoute>
+                            <GoalsList/>
+                        </ProtectedRoute>
+                    }
+                />
 
-            <Route
-                path="/goals/new"
-                element={
-                    <ProtectedRoute>
-                        <GoalForm/>
-                    </ProtectedRoute>
-                }
-            />
+                <Route
+                    path="/goals/new"
+                    element={
+                        <ProtectedRoute>
+                            <GoalForm/>
+                        </ProtectedRoute>
+                    }
+                />
 
-            <Route
-                path="/goals/:id"
-                element={
-                    <ProtectedRoute>
-                        <GoalDetail/>
-                    </ProtectedRoute>
-                }
-            />
+                <Route
+                    path="/goals/:id"
+                    element={
+                        <ProtectedRoute>
+                            <GoalDetail/>
+                        </ProtectedRoute>
+                    }
+                />
 
-            <Route
-                path="/goals/:id/edit"
-                element={
+                <Route
+                    path="/goals/:id/edit"
+                    element={
+                        <ProtectedRoute>
+                            <GoalForm/>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route path="/habits" element={
                     <ProtectedRoute>
-                        <GoalForm/>
-                    </ProtectedRoute>
-                }
-            />
-            <Route path="/habits" element={
-                <ProtectedRoute>
-                    <HabitsList/>
-                </ProtectedRoute>}/>
-            <Route path="/habits/new" element={
-                <ProtectedRoute>
-                    <HabitForm/>
-                </ProtectedRoute>}/>
-            <Route path="/habits/:id/edit" element={
-                <ProtectedRoute>
-                    <HabitForm/>
-                </ProtectedRoute>}/>
+                        <HabitsList/>
+                    </ProtectedRoute>}/>
+                <Route path="/habits/new" element={
+                    <ProtectedRoute>
+                        <HabitForm/>
+                    </ProtectedRoute>}/>
+                <Route path="/habits/:id/edit" element={
+                    <ProtectedRoute>
+                        <HabitForm/>
+                    </ProtectedRoute>}/>
 
-            <Route
-                path="/habits/:id"
-                element={
-                    <ProtectedRoute>
-                        <HabitDetail/>
-                    </ProtectedRoute>
-                }
-            />
+                <Route
+                    path="/habits/:id"
+                    element={
+                        <ProtectedRoute>
+                            <HabitDetail/>
+                        </ProtectedRoute>
+                    }
+                />
+            </Route>
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard/></ProtectedRoute>}/>
-
+            {/* fallback */}
+            <Route path="*" element={<Navigate to="/dashboard" replace/>}/>
         </Routes>
     );
 }
