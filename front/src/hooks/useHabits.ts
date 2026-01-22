@@ -19,11 +19,12 @@ export function useHabits() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const listActive = useCallback(async () => {
+    // ✅ générique: archived=true/false
+    const list = useCallback(async (archived = false) => {
         setLoading(true);
         setError(null);
         try {
-            const {data} = await api.get("/habits");
+            const {data} = await api.get("/habits", {params: {archived}});
             return Array.isArray(data) ? (data as Habit[]) : [];
         } catch (e: any) {
             setError(e?.response?.data?.message ?? "Impossible de charger les habitudes.");
@@ -32,6 +33,12 @@ export function useHabits() {
             setLoading(false);
         }
     }, []);
+
+    // ✅ garde ton API actuelle (actives)
+    const listActive = useCallback(async () => list(false), [list]);
+
+    // ✅ nouvelles archives
+    const listArchived = useCallback(async () => list(true), [list]);
 
     const getOne = useCallback(async (id: string | number) => {
         const {data} = await api.get(`/habits/${id}`);
@@ -57,6 +64,11 @@ export function useHabits() {
 
     const archive = useCallback(async (id: string | number) => {
         const {data} = await api.patch(`/habits/${id}/archive`);
+        return data as Habit;
+    }, []);
+
+    const unarchive = useCallback(async (id: string | number) => {
+        const { data } = await api.patch(`/habits/${id}/unarchive`);
         return data as Habit;
     }, []);
 
@@ -89,5 +101,20 @@ export function useHabits() {
         return Array.isArray(data) ? data : [];
     }, []);
 
-    return {loading, error, listActive, getOne, create, update, archive, checkToday, uncheck, getStats, getLogs};
+    return {
+        loading,
+        error,
+        list,          // ✅ optionnel si tu veux l’utiliser
+        listActive,
+        listArchived,  // ✅ nouveau
+        getOne,
+        create,
+        update,
+        archive,
+        unarchive,
+        checkToday,
+        uncheck,
+        getStats,
+        getLogs,
+    };
 }

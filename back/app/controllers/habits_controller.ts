@@ -16,12 +16,20 @@ import HabitLog from '#models/habit_log'
 
 export default class HabitsController {
   /**
-   * GET /habits
-   * AC: lister actives
+   * GET /habits?archived=true|false
+   * - par défaut: archived=false (actives)
    */
-  async index({ auth }: HttpContext) {
+  async index({ auth, request }: HttpContext) {
     const user = auth.getUserOrFail()
-    return Habit.query().where('user_id', user.id).where('is_archived', false).orderBy('id', 'desc')
+
+    const archivedParam = request.input('archived') // "true" | "false" | undefined
+    const archived =
+      archivedParam === undefined ? false : String(archivedParam).toLowerCase() === 'true'
+
+    return Habit.query()
+      .where('user_id', user.id)
+      .where('is_archived', archived)
+      .orderBy('id', 'desc')
   }
 
   /**
@@ -112,6 +120,22 @@ export default class HabitsController {
     habit.isArchived = true
     await habit.save()
     return habit
+  }
+
+  async unarchive({ auth, params, response }: HttpContext) {
+    const user = auth.getUserOrFail()
+
+    const habit = await Habit.query()
+      .where('id', params.id)
+      .where('user_id', user.id)
+      .first()
+
+    if (!habit) return response.notFound({ message: 'Habitude introuvable' })
+
+    habit.isArchived = false
+    await habit.save()
+
+    return response.ok(habit)
   }
 
   /**
