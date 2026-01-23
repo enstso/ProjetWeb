@@ -1,3 +1,4 @@
+// back/app/controllers/habits_controller.ts
 import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
 import Habit from '#models/habit'
@@ -122,11 +123,13 @@ export default class HabitsController {
     return habit
   }
 
+  /**
+   * PATCH /habits/:id/unarchive
+   * Restaurer une habitude
+   */
   async unarchive({ auth, params, response }: HttpContext) {
     const user = auth.getUserOrFail()
-
     const habit = await Habit.query().where('id', params.id).where('user_id', user.id).first()
-
     if (!habit) return response.notFound({ message: 'Habitude introuvable' })
 
     habit.isArchived = false
@@ -144,7 +147,6 @@ export default class HabitsController {
     const user = auth.getUserOrFail()
 
     const habit = await Habit.query().where('id', params.id).where('user_id', user.id).first()
-
     if (!habit) return response.notFound({ message: 'Habitude introuvable' })
 
     const zone = resolveUserZone(ctx)
@@ -154,7 +156,6 @@ export default class HabitsController {
     const startISO = (request.input('start_date') as string) || habit.startDate.toISODate()!
     const endISO = (request.input('end_date') as string) || todayISO
 
-    // On récupère les logs dans le range (pour completion rate)
     const logsInRange = await HabitLog.query()
       .where('habit_id', habit.id)
       .whereRaw('date >= ?', [startISO])
@@ -163,9 +164,7 @@ export default class HabitsController {
 
     const doneDatesInRange = logsInRange.map((l) => l.date.toISODate()!)
 
-    // Pour streak (best/current), on préfère analyser l’historique complet (depuis start_date)
     const allLogs = await HabitLog.query().where('habit_id', habit.id).orderBy('date', 'asc')
-
     const allDates = allLogs.map((l) => l.date.toISODate()!)
     const allDatesSet = new Set(allDates)
 
@@ -174,15 +173,11 @@ export default class HabitsController {
     let completionRate: number
 
     if (habit.frequency === 'daily') {
-      // ✅ current streak doit inclure aujourd’hui
       currentStreak = calcCurrentDailyStreak(todayISO, allDatesSet)
       bestStreak = allDates.length ? calcBestDailyStreak(allDates) : 0
-
       completionRate = calcCompletionRateDaily(startISO, endISO, doneDatesInRange.length)
     } else {
       const weeklyTarget = habit.weeklyTarget ?? 1
-
-      // Map semaine -> nb logs
       const weekCounts = calcWeeklySuccessMap(allDates, zone)
 
       currentStreak = calcCurrentWeeklyStreak(todayISO, zone, weeklyTarget, weekCounts)

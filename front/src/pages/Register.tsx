@@ -6,27 +6,57 @@ import { Button } from "../components/ui/Button";
 import { useAuth } from "../hooks/useAuth";
 
 export default function Register() {
+    /**
+     * Hook d'authentification :
+     * - register(fullName, email, password) : crée un compte via l'API backend
+     */
     const { register } = useAuth();
+
+    /**
+     * Navigation (React Router)
+     * - après inscription, on redirige vers /dashboard
+     */
     const nav = useNavigate();
 
+    /**
+     * Champs du formulaire (controlled inputs)
+     */
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
+    /**
+     * UI state :
+     * - err : message d'erreur utilisateur
+     * - loading : désactive les champs + bouton pendant la requête
+     */
     const [err, setErr] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
+    /**
+     * Soumission :
+     * - empêche le refresh navigateur
+     * - reset l'erreur
+     * - lance la requête d'inscription
+     * - redirige vers /dashboard si OK
+     * - sinon affiche un message générique (email déjà utilisé, etc.)
+     */
     async function onSubmit(e: React.FormEvent) {
         e.preventDefault();
         setErr(null);
         setLoading(true);
 
         try {
+            // Appelle le backend via le hook (ex: POST /auth/register)
             await register(fullName, email, password);
+
+            // Redirection après succès
             nav("/dashboard");
         } catch {
+            // Message volontairement générique pour couvrir différents cas d'erreur
             setErr("Impossible de créer le compte (email déjà utilisé ?).");
         } finally {
+            // On relâche l'UI dans tous les cas
             setLoading(false);
         }
     }
@@ -40,7 +70,9 @@ export default function Register() {
                 </CardHeader>
 
                 <CardContent>
+                    {/* Formulaire d'inscription */}
                     <form onSubmit={onSubmit} className="space-y-4">
+                        {/* Nom complet */}
                         <Input
                             label="Nom"
                             value={fullName}
@@ -51,6 +83,7 @@ export default function Register() {
                             disabled={loading}
                         />
 
+                        {/* Email + validation HTML (type=email) */}
                         <Input
                             label="Email"
                             type="email"
@@ -62,6 +95,7 @@ export default function Register() {
                             disabled={loading}
                         />
 
+                        {/* Mot de passe */}
                         <Input
                             label="Mot de passe"
                             type="password"
@@ -73,12 +107,14 @@ export default function Register() {
                             disabled={loading}
                         />
 
+                        {/* Affichage erreur */}
                         {err ? (
                             <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                                 {err}
                             </div>
                         ) : null}
 
+                        {/* CTA principal */}
                         <Button disabled={loading} className="w-full">
                             {loading ? "Création..." : "Créer mon compte"}
                         </Button>
@@ -86,6 +122,7 @@ export default function Register() {
                 </CardContent>
 
                 <CardFooter className="justify-center">
+                    {/* Lien vers la page de login */}
                     <p className="text-sm text-zinc-600">
                         Déjà un compte ?{" "}
                         <Link className="font-semibold text-zinc-900 underline underline-offset-4" to="/login">

@@ -13,7 +13,6 @@ function pad(n: number) {
 }
 
 function toLocalISODate(d: Date) {
-    // YYYY-MM-DD dans le timezone du navigateur
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
@@ -30,13 +29,11 @@ function addMonths(date: Date, delta: number) {
 }
 
 function weekdayMon0(date: Date) {
-    // 0 = lundi ... 6 = dimanche
     const js = date.getDay(); // 0=dimanche
-    return (js + 6) % 7;
+    return (js + 6) % 7; // 0=lundi ... 6=dimanche
 }
 
 function normalizeLogDate(raw: string) {
-    // si API renvoie ISO avec time, on garde YYYY-MM-DD
     return raw?.slice(0, 10);
 }
 
@@ -68,7 +65,7 @@ export function HabitTrackingGrid({ habitId }: { habitId: string | number }) {
             const logs: HabitLog[] = await getLogs(habitId, range.startISO, range.endISO);
             const set = new Set<string>();
             for (const l of logs) {
-                const iso = normalizeLogDate((l).date);
+                const iso = normalizeLogDate(l.date);
                 if (iso) set.add(iso);
             }
             setDoneSet(set);
@@ -90,11 +87,10 @@ export function HabitTrackingGrid({ habitId }: { habitId: string | number }) {
         const start = startOfMonth(monthCursor);
         const end = endOfMonth(monthCursor);
 
-        const firstWeekday = weekdayMon0(start); // 0..6
+        const firstWeekday = weekdayMon0(start);
         const daysInMonth = end.getDate();
 
-        // on crée une grille 6 semaines max => 42 cases
-        const totalCells = 42;
+        const totalCells = 42; // 6 semaines
         const out: Array<{ iso: string | null; day: number | null }> = [];
 
         for (let i = 0; i < totalCells; i++) {
@@ -132,38 +128,54 @@ export function HabitTrackingGrid({ habitId }: { habitId: string | number }) {
 
     return (
         <Card>
-            <CardHeader>
-                <div className="flex items-start justify-between gap-3">
+            <CardHeader className="space-y-3">
+                {/* Header responsive */}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <CardTitle>Suivi</CardTitle>
                         <CardDescription>Grille mensuelle (jours réussis / manqués)</CardDescription>
                     </div>
 
-                    <div className="flex gap-2">
-                        <Button variant="secondary" onClick={() => setMonthCursor((d) => addMonths(d, -1))}>
+                    {/* Boutons: wrap mobile */}
+                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                        <Button
+                            variant="secondary"
+                            className="w-full sm:w-auto"
+                            onClick={() => setMonthCursor((d) => addMonths(d, -1))}
+                        >
                             ←
                         </Button>
-                        <Button variant="secondary" onClick={() => setMonthCursor(startOfMonth(new Date()))}>
+                        <Button
+                            variant="secondary"
+                            className="w-full sm:w-auto"
+                            onClick={() => setMonthCursor(startOfMonth(new Date()))}
+                        >
                             Aujourd’hui
                         </Button>
-                        <Button variant="secondary" onClick={() => setMonthCursor((d) => addMonths(d, 1))}>
+                        <Button
+                            variant="secondary"
+                            className="w-full sm:w-auto"
+                            onClick={() => setMonthCursor((d) => addMonths(d, 1))}
+                        >
                             →
                         </Button>
                     </div>
                 </div>
 
-                <p className="mt-2 text-sm font-semibold text-zinc-900 capitalize">{monthLabel}</p>
+                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 capitalize">{monthLabel}</p>
             </CardHeader>
 
             <CardContent className="space-y-4">
                 {err ? (
-                    <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</div>
+                    <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-200">
+                        {err}
+                    </div>
                 ) : null}
 
                 {/* header jours */}
-                <div className="grid grid-cols-7 gap-2 text-xs font-medium text-zinc-600">
-                    {["L", "M", "M", "J", "V", "S", "D"].map((d) => (
-                        <div key={d} className="text-center">
+                <div className="grid grid-cols-7 gap-2 text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                    {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
+                        <div key={`${d}-${i}`} className="text-center">
                             {d}
                         </div>
                     ))}
@@ -178,17 +190,21 @@ export function HabitTrackingGrid({ habitId }: { habitId: string | number }) {
                         const isToday = iso === todayISO;
 
                         const base =
-                            "h-10 rounded-xl border text-sm flex items-center justify-center transition";
+                            "h-10 rounded-xl border text-sm flex items-center justify-center transition select-none";
                         const style = !inMonth
                             ? "border-transparent bg-transparent"
                             : done
-                                ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-                                : "border-zinc-200 bg-white text-zinc-700";
+                                ? "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-100"
+                                : "border-zinc-200 bg-white text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200";
 
-                        const todayRing = isToday ? "ring-2 ring-zinc-900/10" : "";
+                        const todayRing = isToday
+                            ? "ring-2 ring-zinc-900/10 dark:ring-zinc-100/10"
+                            : "";
+
+                        const todayBadge = isToday ? "font-semibold" : "font-medium";
 
                         return (
-                            <div key={idx} className={[base, style, todayRing].join(" ")}>
+                            <div key={idx} className={[base, style, todayRing, todayBadge].join(" ")}>
                                 {c.day ?? ""}
                             </div>
                         );
@@ -196,25 +212,34 @@ export function HabitTrackingGrid({ habitId }: { habitId: string | number }) {
                 </div>
 
                 {/* actions du jour */}
-                <div className="flex items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-zinc-50/70 p-3">
+                <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-zinc-50/70 p-3 dark:border-zinc-800 dark:bg-zinc-900 sm:flex-row sm:items-center sm:justify-between">
                     <div className="text-sm">
-                        <p className="font-semibold text-zinc-900">Aujourd’hui : {todayISO}</p>
-                        <p className="text-xs text-zinc-600">
+                        <p className="font-semibold text-zinc-900 dark:text-zinc-100">Aujourd’hui : {todayISO}</p>
+                        <p className="text-xs text-zinc-600 dark:text-zinc-300">
                             Statut :{" "}
-                            <span className={isTodayChecked ? "text-emerald-700 font-semibold" : "text-zinc-700 font-semibold"}>
+                            <span
+                                className={
+                                    isTodayChecked
+                                        ? "font-semibold text-emerald-700 dark:text-emerald-300"
+                                        : "font-semibold text-zinc-700 dark:text-zinc-200"
+                                }
+                            >
                 {isTodayChecked ? "Réussi" : "Non coché"}
               </span>
                         </p>
                     </div>
 
-                    <Button onClick={onToggleToday} disabled={busyToday || loading}>
+                    <Button
+                        onClick={onToggleToday}
+                        disabled={busyToday || loading}
+                        className="w-full sm:w-auto"
+                    >
                         {busyToday ? "..." : isTodayChecked ? "Uncheck" : "Check"}
                     </Button>
                 </div>
 
-                {loading ? <p className="text-sm text-zinc-600">Chargement…</p> : null}
+                {loading ? <p className="text-sm text-zinc-600 dark:text-zinc-300">Chargement…</p> : null}
             </CardContent>
         </Card>
     );
 }
-

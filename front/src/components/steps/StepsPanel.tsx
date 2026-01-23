@@ -6,21 +6,44 @@ import { useSteps, type Step } from "../../hooks/useSteps";
 import { useToast } from "../ui/Toast";
 import { pickMotivation } from "../../utils/motivation";
 
+/**
+ * Panel UI pour gérer les étapes (steps) d’un objectif :
+ * - charger la liste
+ * - ajouter / éditer / supprimer
+ * - toggle complété (check / uncheck)
+ * - feedback utilisateur via toasts
+ */
 export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
+    /**
+     * Hook métier qui encapsule les appels API (CRUD steps)
+     * + loading/error global + helper isDone() (snake_case/camelCase).
+     */
     const { loading, error, listSteps, addStep, updateStep, deleteStep, isDone } = useSteps();
 
+    /** Liste des steps affichées dans le panel */
     const [steps, setSteps] = useState<Step[]>([]);
+    /** Champs du formulaire d’ajout */
     const [newTitle, setNewTitle] = useState("");
     const [newDeadline, setNewDeadline] = useState("");
 
+    /** Etat d’édition : quel step est en cours d’édition + valeurs temporaires */
     const [editId, setEditId] = useState<number | null>(null);
     const [editTitle, setEditTitle] = useState("");
     const [editDeadline, setEditDeadline] = useState("");
 
+    /**
+     * ID du step "occupé" (requête en cours) :
+     * permet de désactiver les actions sur un step pendant son update/delete/toggle.
+     */
     const [busyStepId, setBusyStepId] = useState<number | null>(null);
 
+    /** Toasts (succès/info/erreur) pour feedback immédiat */
     const { push } = useToast();
 
+    /**
+     * Recharge la liste des steps côté API et met à jour le state local.
+     * En cas d’erreur, on affiche un toast "error".
+     */
     async function refresh() {
         try {
             const data = await listSteps(goalId);
@@ -34,11 +57,26 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
         }
     }
 
+    /**
+     * Au montage du composant (et à chaque changement de goalId),
+     * on recharge la liste des steps.
+     *
+     * Note: eslint-disable car refresh n’est pas dans les deps volontairement
+     * (on veut rerun uniquement sur goalId).
+     */
     useEffect(() => {
         refresh();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [goalId]);
 
+    /**
+     * Soumission du formulaire "ajout d’étape".
+     * - validation simple: titre non vide
+     * - appel API
+     * - ajout optimiste dans la liste locale
+     * - reset du formulaire
+     * - toast succès/erreur
+     */
     async function onAdd(e: React.FormEvent) {
         e.preventDefault();
         if (!newTitle.trim()) return;
@@ -67,12 +105,25 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
         }
     }
 
+    /**
+     * Passe un step en mode édition:
+     * - stocke son id
+     * - pré-remplit les champs d’édition avec les valeurs existantes
+     */
     function startEdit(s: Step) {
         setEditId(s.id);
         setEditTitle(s.title ?? "");
         setEditDeadline((s.deadline ?? ""));
     }
 
+    /**
+     * Sauvegarde du step en cours d’édition (PUT /steps/:id):
+     * - garde-fous: editId et editTitle non vide
+     * - désactive les actions sur ce step via busyStepId
+     * - met à jour la liste locale avec le step retourné
+     * - sort du mode édition si ok
+     * - toasts succès/erreur
+     */
     async function onSaveEdit() {
         if (!editId) return;
         if (!editTitle.trim()) return;
@@ -103,6 +154,13 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
         }
     }
 
+    /**
+     * Toggle completed (check/uncheck) :
+     * - calcule l’état actuel via isDone()
+     * - envoie un update avec is_completed inversé
+     * - met à jour la liste locale avec le step retourné
+     * - toast motivant si on coche, toast info si on décoche
+     */
     async function onToggleCompleted(step: Step) {
         const done = isDone(step);
         setBusyStepId(step.id);
@@ -138,6 +196,13 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
         }
     }
 
+    /**
+     * Suppression d’une étape:
+     * - confirmation via confirm()
+     * - désactive les actions sur le step via busyStepId
+     * - supprime côté API puis filtre côté UI
+     * - toast succès/erreur
+     */
     async function onDelete(id: number) {
         if (!confirm("Supprimer cette étape ?")) return;
 
@@ -162,10 +227,12 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
         }
     }
 
+    /** Compteur d’étapes terminées (affiché dans le header) */
     const doneCount = steps.filter((s) => isDone(s)).length;
 
     return (
         <Card>
+            {/* En-tête du panel: titre + compteur done/total */}
             <CardHeader>
                 <CardTitle>Étapes</CardTitle>
                 <CardDescription>
@@ -174,15 +241,17 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
             </CardHeader>
 
             <CardContent className="space-y-4">
+                {/* Erreur globale du hook (ex: listSteps) */}
                 {error ? (
                     <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                         {error}
                     </div>
                 ) : null}
 
-                {/* Liste */}
+                {/* Liste des étapes */}
                 <div className="space-y-2">
                     {steps.map((s) => {
+                        /** Etat calculé: done / editing / busy (actions désactivées) */
                         const done = isDone(s);
                         const isEditing = editId === s.id;
                         const busy = busyStepId === s.id;
@@ -191,12 +260,19 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
                             <div
                                 key={s.id}
                                 className={[
+                                    // carte step
                                     "rounded-2xl border p-3 transition",
+                                    // style variant si complété
                                     done ? "border-emerald-200 bg-emerald-50/60" : "border-zinc-200 bg-white",
+                                    // feedback visuel si requête en cours sur ce step
                                     busy ? "opacity-70" : "",
                                 ].join(" ")}
                             >
                                 {isEditing ? (
+                                    /**
+                                     * Mode édition : inputs + boutons Enregistrer/Annuler
+                                     * Le disabled sur les boutons empêche double-submit.
+                                     */
                                     <div className="space-y-3">
                                         <Input label="Titre" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
                                         <Input
@@ -221,6 +297,9 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
                                         </div>
                                     </div>
                                 ) : (
+                                    /**
+                                     * Mode lecture : titre + deadline + actions (toggle/edit/delete)
+                                     */
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0">
                                             <p className={`font-semibold ${done ? "text-zinc-500 line-through" : "text-zinc-900"}`}>
@@ -232,7 +311,7 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
                                         </div>
 
                                         <div className="flex shrink-0 gap-2">
-                                            {/* Toggle */}
+                                            {/* Toggle check/uncheck (bouton custom) */}
                                             <button
                                                 type="button"
                                                 disabled={busy}
@@ -249,9 +328,12 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
                                                 {done ? "✓" : "○"}
                                             </button>
 
+                                            {/* Action: passer en édition */}
                                             <Button variant="secondary" onClick={() => startEdit(s)} disabled={busy}>
                                                 ✎
                                             </Button>
+
+                                            {/* Action: supprimer */}
                                             <Button variant="secondary" onClick={() => onDelete(s.id)} disabled={busy}>
                                                 🗑
                                             </Button>
@@ -262,12 +344,13 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
                         );
                     })}
 
+                    {/* Etat vide */}
                     {steps.length === 0 ? (
                         <p className="text-sm text-zinc-600">Aucune étape. Ajoute-en une pour progresser.</p>
                     ) : null}
                 </div>
 
-                {/* Ajout */}
+                {/* Formulaire d’ajout d’étape */}
                 <form onSubmit={onAdd} className="space-y-3 rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4">
                     <Input
                         label="Nouvelle étape"
@@ -281,6 +364,7 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
                         value={newDeadline}
                         onChange={(e) => setNewDeadline(e.target.value)}
                     />
+                    {/* loading désactive le bouton et change le texte */}
                     <Button disabled={loading} className="w-full">
                         {loading ? "Ajout..." : "Ajouter l’étape"}
                     </Button>

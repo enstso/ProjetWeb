@@ -1,147 +1,421 @@
-## Organisation du projet
+# Projet 4 — Application de gestion d’objectifs et d’habitudes (v2.0)
 
-Ce dépôt suit une organisation simple :
 
-- `backend/` : API **AdonisJS** (Node.js)
-- `frontend/` : application **React** (interface utilisateur)
 
-L’objectif est de fournir une application web de gestion d’objectifs et d’habitudes (objectifs + étapes, habitudes +
-suivi/streaks), avec une mise en place DevOps complète (Docker, CI/CD, GitHub Projects).
+Application web permettant aux utilisateurs de **créer des objectifs**, les **découper en étapes**, et de **suivre des habitudes** quotidiennes/hebdomadaires avec **tracking**, **streaks**, **stats** et une UI motivante.
 
 ---
 
-## Workflow Git (GitFlow)
+## Sommaire
 
-Le projet respecte un workflow inspiré de **GitFlow** :
-
-- `main` : branche de production (stable)
-- `develop` : branche d’intégration (développement)
-- `feature/*` : nouvelles fonctionnalités (ex: `feature/auth`, `feature/goals-crud`)
-- `fix/*` : corrections de bugs (ex: `fix/streak-calculation`)
-- `release/*` : préparation d’une version (optionnel)
-- `hotfix/*` : correctifs urgents sur `main` (optionnel)
-
-Règles :
-
-- Les développements se font sur des branches `feature/*` à partir de `develop`.
-- Les Pull Requests ciblent `develop`.
-- Une fois stable, `develop` est fusionnée dans `main` pour livrer une version.
-
----
-
-## GitHub Projects (Kanban)
-
-La gestion des tâches se fait via **GitHub Projects** en mode Kanban :
-
-- Backlog → Todo → In Progress → Done
-
-Chaque issue correspond à une tâche, groupée par Epics (Foundations, Goals, Habits, Dashboard, Quality).
+- [1. Description](#1-description)
+- [2. Stack & Architecture](#2-stack--architecture)
+- [3. Fonctionnalités](#3-fonctionnalités)
+- [4. Installation & Lancement](#4-installation--lancement)
+  - [4.1 Lancer avec Docker](#41-lancer-avec-docker)
+  - [4.2 Lancer en local (sans Docker)](#42-lancer-en-local-sans-docker)
+- [5. Configuration (.env)](#5-configuration-env)
+- [6. API (Routes)](#6-api-routes)
+- [7. Modèle de données](#7-modèle-de-données)
+- [8. Algorithmes (progression / streaks / complétion)](#8-algorithmes-progression--streaks--complétion)
+- [9. Timezone & Tracking](#9-timezone--tracking)
+- [10. Tests](#10-tests)
+- [11. CI/CD](#11-cicd)
+- [12. Workflow Git / GitHub Projects](#12-workflow-git--github-projects)
+- [13. Limitations & pistes d’amélioration](#13-limitations--pistes-damélioration)
 
 ---
 
-## Docker
+## 1. Description
 
-L’application est conteneurisée. Le lancement se fait avec :
+Ce projet vise à fournir une application de développement personnel centrée sur :
+- **Objectifs (one-shot)** : créer un objectif avec une deadline, le suivre, le compléter.
+- **Étapes d’objectifs** : décomposer un objectif en tâches concrètes et mesurer la progression.
+- **Habitudes (récurrentes)** : créer une habitude quotidienne/hebdomadaire, la cocher, afficher un historique.
+- **Tableau de bord** : synthèse des objectifs actifs et des habitudes du jour + stats de base.
+- **UX motivante** : feedback visuel, messages de motivation, interface responsive.
+
+---
+
+## 2. Stack & Architecture
+
+### Backend
+- **AdonisJS (Node.js)** — API REST
+- **PostgreSQL** — base relationnelle
+- **Lucid ORM** — modèles / relations
+- **Luxon** — gestion dates & timezone (tracking “aujourd’hui”)
+- **Validation** — VineJS (validators)
+
+### Frontend
+- **React**
+- **React Router**
+- **TailwindCSS** (UI)
+- **Axios** (client API)
+- Composants UI maison : `Card`, `Button`, `Input`, `Select`, `ProgressBar`, `Toast`, etc.
+
+### Organisation du repo
+- `back/` : API AdonisJS
+- `front/` : application React
+
+---
+
+## 3. Fonctionnalités
+
+### 3.1 Gestion utilisateurs (MVP)
+- Inscription
+- Connexion (token)
+- Profil (GET /me, PUT /me)
+
+### 3.2 Objectifs (CRUD)
+- Créer un objectif :
+  - titre (obligatoire), description, catégorie, priorité, statut
+  - start_date & deadline (validation : deadline >= start_date)
+- Lister les objectifs :
+  - filtre par statut/priorité
+  - tri par deadline
+- Détail d’un objectif
+- Modifier / supprimer
+- Marquer comme complété
+
+### 3.3 Étapes d’objectifs
+- Ajouter / modifier / supprimer des steps
+- Cocher une step comme complétée
+- Progression de l’objectif = % steps complétées
+
+### 3.4 Habitudes (CRUD)
+- Créer / modifier
+- Fréquence :
+  - `daily`
+  - `weekly` avec `weekly_target`
+- Archiver / restaurer (unarchive)
+- Liste Actives / Archivées côté UI
+
+### 3.5 Habit tracking
+- `check today` / `uncheck` (log journalier)
+- Unicité (habit_id, date) => pas de double comptage (idempotent)
+- Grille mensuelle (historique visuel)
+- Stats :
+  - streak actuel
+  - meilleur streak
+  - taux de complétion (%)
+
+### 3.6 Dashboard
+- Objectifs actifs (preview + total)
+- Habitudes du jour (actives + `completed_today`)
+- Stats globales :
+  - objectifs complétés
+  - streak max (sur toutes les habitudes)
+  - habitudes complétées aujourd’hui
+
+---
+
+## 4. Installation & Lancement
+
+### 4.1 Lancer avec Docker
+
+> Objectif : démarrer **PostgreSQL + Backend + Frontend** en une commande.
 
 ```bash
 docker-compose up --build
 ````
 
-Objectif : démarrer **frontend + backend + PostgreSQL** avec une seule commande.
+Ensuite :
+
+* Front : [http://localhost:5173](http://localhost:5173) (selon config)
+* API : [http://localhost:3333](http://localhost:3333)
+
+### 4.2 Lancer en local (sans Docker)
+
+#### Prérequis
+
+* Node.js >= 20
+* PostgreSQL >= 16
+
+#### Backend
+
+```bash
+cd back
+npm install
+cp .env.example .env
+node ace migration:run
+npm run dev
+```
+
+#### Frontend
+
+```bash
+cd front
+npm install
+cp .env.example .env
+npm run dev
+```
 
 ---
 
-## CI/CD
+## 5. Configuration (.env)
 
-Une pipeline **GitHub Actions** est configurée pour automatiser :
+### Backend (Adonis)
 
-* Lint (frontend + backend)
-* Tests (au minimum : progression objectifs & streaks)
-* Build (frontend + backend)
+Exemple `.env.example` (à adapter) :
 
----
+```env
+NODE_ENV=development
+PORT=3333
+HOST=0.0.0.0
+LOG_LEVEL=info
+APP_KEY=0123456789abcdef0123456789abcdef
 
-## MVP
+DB_CONNECTION=pg
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_USER=habituser
+DB_PASSWORD=habitpass
+DB_DATABASE=habitdb
+```
 
-## Must have (MVP)
+> ⚠️ En CI, Adonis valide ces variables (PORT/HOST/LOG_LEVEL/DB_*).
+> Si tu utilises `PG_HOST/PG_PORT/...` dans GitHub Actions, ça ne match pas le schéma `DB_HOST/DB_PORT/...`.
 
-**Utilisateurs**
+### Frontend
 
-* Inscription + connexion (authentification sécurisée)
-* Profil utilisateur : afficher + modifier les informations
+`.env.example` :
 
-**Objectifs**
-
-* Créer un objectif (titre obligatoire, description, dates début/deadline, priorité, statut, catégorie)
-* Voir la liste des objectifs
-* Filtrer par statut et priorité
-* Trier par date d’échéance (deadline)
-* Voir le détail d’un objectif avec sa progression
-* Modifier un objectif
-* Marquer un objectif comme complété
-* Supprimer un objectif
-
-**Étapes d’objectifs**
-
-* Ajouter des étapes à un objectif (titre, deadline optionnelle, statut à faire/complétée)
-* Modifier / supprimer une étape
-* Marquer une étape comme complétée
-* Calculer la progression de l’objectif (% d’étapes complétées)
-
-**Habitudes**
-
-* Créer une habitude (nom obligatoire, description, fréquence quotidienne ou X/semaine, catégorie, date de début)
-* Voir la liste des habitudes actives
-* Modifier une habitude
-* Archiver une habitude
-
-**Suivi des habitudes (tracking)**
-
-* Vue calendrier ou grille pour visualiser l’historique
-* Bouton “check” pour marquer l’habitude complétée aujourd’hui
-* Possibilité d’annuler (uncheck)
-* Pas de double comptage (1 log par habitude et par date)
-* Gestion du fuseau horaire pour “aujourd’hui”
-* Calcul : streak actuel + meilleur streak + taux de complétion
-
-**Tableau de bord**
-
-* Vue d’ensemble des objectifs en cours
-* Vue d’ensemble des habitudes du jour
-* Stats de base : nombre d’objectifs complétés, streak le plus long, habitudes complétées aujourd’hui
-
-**Interface**
-
-* Interface responsive (mobile/tablette/desktop)
-* Navigation claire entre objectifs et habitudes
-* Feedback visuel lors des complétions + messages de motivation
-
-**Exigences techniques obligatoires**
-
-* Docker + `docker-compose up` fonctionnel
-* CI/CD (GitHub Actions) : lint + tests + build
-* Tests automatisés minimum sur : progression objectifs + streaks
-* Documentation minimum : README + `.env.example` + doc API + schéma BDD + explication des algorithmes
+```env
+VITE_API_URL=http://localhost:3333
+```
 
 ---
 
-## Should have (v2)
+## 6. API (Routes)
 
-* Graphiques de progression (objectifs) + graphiques d’évolution des streaks
+Toutes les routes sont préfixées **sans** `/api` (ex: `/goals`, `/habits`, etc.).
+
+### Auth
+
+* `POST /auth/register` — inscription
+* `POST /auth/login` — connexion
+* `GET /me` — profil (auth required)
+* `PUT /me` — modifier profil (auth required)
+
+### Goals
+
+* `GET /goals?status=active&priority=high&order=asc|desc` — liste + filtres
+* `POST /goals` — créer
+* `GET /goals/:id` — détail
+* `PUT /goals/:id` — modifier
+* `DELETE /goals/:id` — supprimer
+* `PATCH /goals/:id/complete` — marquer complété
+* `GET /goals/:id/progress` — % progression basé sur steps
+
+### Steps
+
+* `GET /goals/:id/steps` — lister steps
+* `POST /goals/:id/steps` — ajouter
+* `PUT /steps/:id` — modifier (inclut toggle `is_completed`)
+* `DELETE /steps/:id` — supprimer
+* `PATCH /steps/:id/complete` — compléter (optionnel / legacy)
+
+### Habits
+
+* `GET /habits?archived=true|false` — liste actives/archivées
+* `POST /habits` — créer
+* `GET /habits/:id` — détail
+* `PUT /habits/:id` — modifier
+* `PATCH /habits/:id/archive` — archiver
+* `PATCH /habits/:id/unarchive` — restaurer
+
+### Habit logs / tracking
+
+* `POST /habits/:id/log` — check aujourd’hui (idempotent)
+* `DELETE /habits/:id/log/:date` — uncheck (YYYY-MM-DD)
+* `GET /habits/:id/logs?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD` — logs
+* `GET /habits/:id/stats` — stats (streaks / completion rate)
+
+### Dashboard
+
+* `GET /dashboard?goal_limit=5` — vue d’ensemble
+
+---
+
+## 7. Modèle de données
+
+### Users
+
+* `id`
+* `full_name`
+* `email` (unique)
+* `password` (hashé)
+* `created_at`, `updated_at`
+
+### Goals
+
+* `id`, `user_id`
+* `title` (required), `description`, `category`
+* `priority` enum (`low`/`medium`/`high`)
+* `status` enum (`active`/`completed`/`abandoned`)
+* `start_date`, `deadline`
+* `completed_at` nullable
+* relation : `Goal hasMany Steps`
+
+### Steps
+
+* `id`, `goal_id`
+* `title` (required), `deadline` nullable
+* `order` (tri)
+* `is_completed` boolean
+* `completed_at` nullable
+
+### Habits
+
+* `id`, `user_id`
+* `name` (required), `description`, `category`
+* `frequency` enum (`daily`/`weekly`)
+* `weekly_target` nullable
+* `start_date`
+* `is_archived` boolean
+
+### HabitLogs
+
+* `id`, `habit_id`
+* `date` (DATE)
+* `is_completed` boolean (true)
+* `notes` nullable
+* contrainte : **(habit_id, date) unique**
+
+---
+
+## 8. Algorithmes (progression / streaks / complétion)
+
+### 8.1 Progression d’un objectif
+
+* `total_steps = count(steps)`
+* `done_steps = count(steps where is_completed = true)`
+* `progress = total_steps === 0 ? 0 : round(done/total*100)`
+
+Implémenté via la route :
+
+* `GET /goals/:id/progress`
+
+### 8.2 Streak quotidien (daily)
+
+Règle importante : **un streak est actif uniquement si aujourd’hui est coché.**
+On remonte ensuite jour par jour tant que la date est présente dans le set.
+
+Fonctions :
+
+* `calcCurrentDailyStreak(todayISO, doneSet)`
+* `calcBestDailyStreak(sortedAscDates)`
+
+### 8.3 Streak hebdomadaire (weekly)
+
+Règle importante : **streak actif uniquement si la semaine courante atteint `weeklyTarget`.**
+On compte ensuite les semaines successives >= target.
+
+Fonctions :
+
+* `calcWeeklySuccessMap(dates, zone)`
+* `calcCurrentWeeklyStreak(todayISO, zone, weeklyTarget, weekCounts)`
+* `calcBestWeeklyStreak(zone, weeklyTarget, weekCounts)`
+
+### 8.4 Completion rate
+
+* Daily : `doneCount / nbDays(start..end)`
+* Weekly : `doneCount / (nbWeeks(start..end) * weeklyTarget)`
+
+---
+
+## 9. Timezone & Tracking
+
+Le frontend envoie automatiquement le timezone utilisateur :
+
+* Header : `X-Timezone: Europe/Paris` (ex)
+
+Backend :
+
+* `resolveUserZone(ctx)` lit `x-timezone`
+* `userTodayISO(ctx)` calcule “aujourd’hui” dans ce timezone
+
+Objectif : éviter les bugs classiques où “aujourd’hui” est calculé en UTC et décale les checks.
+
+---
+
+## 10. Tests
+
+Tests attendus (minimum) :
+
+* calcul progression objectifs
+* calcul streaks daily/weekly
+
+Commandes typiques :
+
+```bash
+cd back
+node ace test
+```
+
+---
+
+## 11. CI/CD
+
+Pipeline GitHub Actions :
+
+* Backend : lint + migrations + tests + build
+* Frontend : lint + build
+
+Points importants :
+
+* Les migrations doivent avoir toutes les variables `.env` attendues par `Env.schema` (Adonis).
+* PostgreSQL est démarré via `services:` dans Actions.
+
+---
+
+## 12. Workflow Git / GitHub Projects
+
+### GitFlow
+
+* `main` : stable
+* `develop` : intégration
+* `feature/*` : dev de features
+* `fix/*` : corrections
+
+Règles :
+
+* PR vers `develop`
+* Merge `develop` → `main` pour release
+
+### GitHub Projects (Kanban)
+
+* Backlog → Todo → In Progress → Done
+  Chaque issue correspond à une tâche (souvent reliée à une user story et un AC).
+
+---
+
+## 13. Limitations & pistes d’amélioration
+
+### Limitations actuelles (à surveiller)
+
+* Sécurité backend : bloquer check/uncheck sur habitudes archivées (à appliquer sur toutes les routes log si pas déjà fait partout).
+* `PATCH /steps/:id/complete` est redondant si `PUT /steps/:id` gère déjà `is_completed`.
+
+### Pistes (v2 / v3)
+
 * Heatmap habitudes (calendrier coloré)
-* Statistiques par catégorie
-* Tags (objectifs/habitudes) + filtrage par tags
-* Notes sur objectifs + journal quotidien
+* Graphiques d’évolution (streak / progression)
+* Tags + filtres
+* Notes / journal
+* Gamification : XP, niveaux, badges
+* Export CSV/PDF
+* PWA + offline + notifications push
+* Rappels mail (Ethereal pour tests)
 
 ---
 
-## Nice to have (v3)
+## Références (sujet)
 
-* Rappels email (habitudes + deadlines)
-* Gamification complète (XP, niveaux, badges, défis hebdo)
-* Revue hebdomadaire / mensuelle automatique + suggestions
-* Templates d’objectifs + duplication
-* Partage social / objectifs d’équipe
-* Export de données (PDF, CSV/JSON)
-* PWA (offline + installation + notifications push)
+Projet : **Application de gestion d’objectifs et d’habitudes**
+MVP : objectifs + étapes + habitudes + tracking + dashboard + DevOps (Docker/CI)
+Exigences : calculs corrects, timezone, pas de double logs, validation dates, README complet.
 
+---
+
+```
