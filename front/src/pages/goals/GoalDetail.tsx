@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import {useEffect, useState} from "react";
+import {Link, useNavigate, useParams} from "react-router-dom";
 import {
     Card,
     CardHeader,
@@ -8,10 +8,10 @@ import {
     CardContent,
     CardFooter,
 } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
-import { ProgressBar } from "../../components/ui/ProgressBar";
-import { useGoals, type Goal } from "../../hooks/useGoals";
-import { StepsPanel } from "../../components/steps/StepsPanel";
+import {Button} from "../../components/ui/Button";
+import {ProgressBar} from "../../components/ui/ProgressBar";
+import {useGoals, type Goal} from "../../hooks/useGoals";
+import {StepsPanel} from "../../components/steps/StepsPanel";
 
 /**
  * Page GoalDetail
@@ -24,7 +24,7 @@ export default function GoalDetail() {
     /**
      * Récupère l'ID depuis l'URL /goals/:id
      */
-    const { id } = useParams();
+    const {id} = useParams();
 
     /**
      * Hook de navigation (redirections après delete, etc.)
@@ -39,7 +39,7 @@ export default function GoalDetail() {
      * - deleteGoal: DELETE /goals/:id
      * - helpers: fonctions de lecture startDate/deadline (camelCase/snake_case)
      */
-    const { getGoal, deleteGoal, completeGoal, getProgress, helpers } = useGoals();
+    const {getGoal, deleteGoal, completeGoal, getProgress, helpers} = useGoals();
 
     /**
      * State principal : objectif chargé depuis l’API
@@ -93,9 +93,9 @@ export default function GoalDetail() {
              */
             const p = await getProgress(id);
             setProgress(p.progress_percent);
-            setProgressMeta({ total: p.total_steps, done: p.completed_steps });
+            setProgressMeta({total: p.total_steps, done: p.completed_steps});
         } catch (e) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+
             // @ts-expect-error - on récupère un message backend si présent
             setErr(e?.response?.data?.message ?? "Impossible de charger l’objectif.");
         } finally {
@@ -151,20 +151,20 @@ export default function GoalDetail() {
     /**
      * États UI de chargement / erreur / absence d’objectif
      */
-    if (loading) return <div className="p-6 text-sm text-zinc-600">Chargement...</div>;
-    if (err) return <div className="p-6 text-sm text-red-700">{err}</div>;
+    if (loading) return <div className="p-4 sm:p-6 text-sm text-zinc-600">Chargement...</div>;
+    if (err) return <div className="p-4 sm:p-6 text-sm text-red-700">{err}</div>;
     if (!goal) return null;
 
     return (
-        <div className="min-h-screen w-full bg-gradient-to-b from-zinc-50 to-white p-4">
+        <div className="min-h-screen w-full bg-gradient-to-b from-zinc-50 to-white p-4 sm:p-6">
             <div className="mx-auto w-full max-w-2xl space-y-4">
                 <Card>
-                    <CardHeader>
+                    <CardHeader className="space-y-2">
                         {/* Titre de l’objectif */}
-                        <CardTitle>{goal.title}</CardTitle>
+                        <CardTitle className="break-words">{goal.title}</CardTitle>
 
                         {/* Badges / infos (status, priority, category) */}
-                        <CardDescription>
+                        <CardDescription className="break-words">
                             {goal.status.toUpperCase()} • {goal.priority.toUpperCase()} •{" "}
                             {goal.category ?? "Sans catégorie"}
                         </CardDescription>
@@ -173,7 +173,7 @@ export default function GoalDetail() {
                     <CardContent className="space-y-4">
                         {/* Progression (calculée côté backend via steps) */}
                         <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-                            <ProgressBar value={progress} label="Progression de l’objectif" />
+                            <ProgressBar value={progress} label="Progression de l’objectif"/>
                             <p className="mt-2 text-xs text-zinc-500">
                                 {progressMeta.done}/{progressMeta.total} étape(s) complétée(s)
                             </p>
@@ -181,7 +181,8 @@ export default function GoalDetail() {
 
                         {/* Description si présente, sinon placeholder */}
                         {goal.description ? (
-                            <div className="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4 text-sm text-zinc-700">
+                            <div
+                                className="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4 text-sm text-zinc-700 break-words">
                                 {goal.description}
                             </div>
                         ) : (
@@ -192,14 +193,14 @@ export default function GoalDetail() {
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                             <div className="rounded-2xl border border-zinc-200 bg-white p-4">
                                 <p className="text-xs text-zinc-500">Start date</p>
-                                <p className="mt-1 font-semibold text-zinc-900">
+                                <p className="mt-1 font-semibold text-zinc-900 break-words">
                                     {helpers.getStartDate(goal) || "—"}
                                 </p>
                             </div>
 
                             <div className="rounded-2xl border border-zinc-200 bg-white p-4">
                                 <p className="text-xs text-zinc-500">Deadline</p>
-                                <p className="mt-1 font-semibold text-zinc-900">
+                                <p className="mt-1 font-semibold text-zinc-900 break-words">
                                     {helpers.getDeadline(goal) || "—"}
                                 </p>
                             </div>
@@ -211,24 +212,35 @@ export default function GoalDetail() {
                                 Marquer l’objectif comme complété
                             </Button>
                         ) : (
-                            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                            <div
+                                className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
                                 Objectif complété ✅
                             </div>
                         )}
                     </CardContent>
 
                     {/* Footer : navigation + actions */}
-                    <CardFooter className="justify-between flex-wrap gap-2">
-                        <Link to="/goals">
-                            <Button variant="secondary">Retour liste</Button>
+                    <CardFooter className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        {/* Bouton retour : pleine largeur en mobile */}
+                        <Link to="/goals" className="w-full sm:w-auto">
+                            <Button variant="secondary" className="w-full sm:w-auto">
+                                Retour liste
+                            </Button>
                         </Link>
 
-                        <div className="flex gap-2">
-                            <Link to={`/goals/${goal.id}/edit`}>
-                                <Button variant="secondary">Modifier</Button>
+                        {/* Actions : stack mobile / inline desktop */}
+                        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                            <Link to={`/goals/${goal.id}/edit`} className="w-full sm:w-auto">
+                                <Button variant="secondary" className="w-full sm:w-auto">
+                                    Modifier
+                                </Button>
                             </Link>
 
-                            <Button variant="secondary" onClick={onDelete}>
+                            <Button
+                                variant="secondary"
+                                onClick={onDelete}
+                                className="w-full sm:w-auto"
+                            >
                                 Supprimer
                             </Button>
                         </div>
@@ -236,9 +248,9 @@ export default function GoalDetail() {
                 </Card>
 
                 {/* Steps : gestion des étapes (add/edit/toggle/delete) */}
-                <StepsPanel goalId={goal.id} />
+                <StepsPanel goalId={goal.id}/>
 
-                {/* Refresh manuel : utile si tu veux recalculer la progression après actions sur steps */}
+                {/* Refresh manuel : utile pour recalculer la progression après actions sur steps */}
                 <Button variant="secondary" className="w-full" onClick={refresh}>
                     Rafraîchir la progression
                 </Button>

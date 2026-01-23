@@ -1,7 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { AuthLoginDto, AuthRegisterDto } from '../types/auth_types.js'
 import User from '#models/user'
-import hash from '@adonisjs/core/services/hash'
 
 export default class AuthController {
   /**
@@ -47,11 +46,6 @@ export default class AuthController {
     // Recherche user (null => email inconnu)
     const user = await User.findBy('email', payload.email)
     if (user === null) return response.unauthorized()
-
-    // Vérification du hash (⚠️ note : cette vérification doit être utilisée avec un check du résultat)
-    // Ici, on vérifie par sécurité que le password correspond au hash stocké.
-    await hash.verify(user.password, payload.password)
-
     // Vérification complète via helper Adonis (email + password) => user "validé"
     // (Cette méthode gère généralement les erreurs si credentials invalides)
     const userVerified = await User.verifyCredentials(payload.email, payload.password)

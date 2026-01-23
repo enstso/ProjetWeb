@@ -1,4 +1,4 @@
-# Projet 4 — Application de gestion d’objectifs et d’habitudes (v2.0)
+# Projet 4 — Application de gestion d’objectifs et d’habitudes
 
 
 
@@ -12,8 +12,8 @@ Application web permettant aux utilisateurs de **créer des objectifs**, les **d
 - [2. Stack & Architecture](#2-stack--architecture)
 - [3. Fonctionnalités](#3-fonctionnalités)
 - [4. Installation & Lancement](#4-installation--lancement)
-  - [4.1 Lancer avec Docker](#41-lancer-avec-docker)
-  - [4.2 Lancer en local (sans Docker)](#42-lancer-en-local-sans-docker)
+- [4.1 Lancer avec Docker](#41-lancer-avec-docker)
+- [4.2 Lancer en local (sans Docker)](#42-lancer-en-local-sans-docker)
 - [5. Configuration (.env)](#5-configuration-env)
 - [6. API (Routes)](#6-api-routes)
 - [7. Modèle de données](#7-modèle-de-données)
@@ -25,6 +25,7 @@ Application web permettant aux utilisateurs de **créer des objectifs**, les **d
 - [13. Limitations & pistes d’amélioration](#13-limitations--pistes-damélioration)
 
 ---
+La doc API: [docs/API.md](docs/API.md) (routes Auth / Goals / Steps / Habits / Logs / Dashboard)
 
 ## 1. Description
 
@@ -394,7 +395,6 @@ Règles :
 
 ### Limitations actuelles (à surveiller)
 
-* Sécurité backend : bloquer check/uncheck sur habitudes archivées (à appliquer sur toutes les routes log si pas déjà fait partout).
 * `PATCH /steps/:id/complete` est redondant si `PUT /steps/:id` gère déjà `is_completed`.
 
 ### Pistes (v2 / v3)
@@ -407,15 +407,3 @@ Règles :
 * Export CSV/PDF
 * PWA + offline + notifications push
 * Rappels mail (Ethereal pour tests)
-
----
-
-## Références (sujet)
-
-Projet : **Application de gestion d’objectifs et d’habitudes**
-MVP : objectifs + étapes + habitudes + tracking + dashboard + DevOps (Docker/CI)
-Exigences : calculs corrects, timezone, pas de double logs, validation dates, README complet.
-
----
-
-```

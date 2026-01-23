@@ -74,9 +74,9 @@ export default class DashboardController {
     // Logs du jour (uniquement les habit_id) pour savoir quelles habitudes sont cochées aujourd'hui
     const todayLogs = activeHabitIds.length
       ? await HabitLog.query()
-        .whereIn('habit_id', activeHabitIds)
-        .whereRaw('date = ?', [todayISO]) // colonne DATE, comparée à "YYYY-MM-DD"
-        .select(['habit_id'])
+          .whereIn('habit_id', activeHabitIds)
+          .whereRaw('date = ?', [todayISO]) // colonne DATE, comparée à "YYYY-MM-DD"
+          .select(['habit_id'])
       : []
 
     // Set pour lookup O(1) : habitId => "cochée aujourd'hui ?"
@@ -118,9 +118,9 @@ export default class DashboardController {
     // Tous les logs de toutes les habitudes, triés asc pour faciliter les calculs
     const allLogs = allHabitIds.length
       ? await HabitLog.query()
-        .whereIn('habit_id', allHabitIds)
-        .select(['habit_id', 'date'])
-        .orderBy('date', 'asc')
+          .whereIn('habit_id', allHabitIds)
+          .select(['habit_id', 'date'])
+          .orderBy('date', 'asc')
       : []
 
     // Regroupement des dates (YYYY-MM-DD) par habitId

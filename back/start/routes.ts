@@ -63,6 +63,6 @@ router.group(() => {
   router.post('/habits/:id/log', [HabitLogsController, 'store']).use(middleware.auth())
   router.delete('/habits/:id/log/:date', [HabitLogsController, 'destroy']).use(middleware.auth())
 })
-router.post('/habits/:id/logs', [HabitLogsController, 'index'])
+router.post('/habits/:id/logs', [HabitLogsController, 'index']).use(middleware.auth())
 router.get('/habits/:id/stats', [HabitsController, 'stats']).use(middleware.auth())
 router.get('/dashboard', [DashboardController, 'show']).use([middleware.auth()])

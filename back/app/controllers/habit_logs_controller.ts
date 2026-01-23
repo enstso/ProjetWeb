@@ -70,7 +70,8 @@ export default class HabitLogsController {
           .whereRaw('date = ?', [todayISO])
           .first()
 
-        if (row) return response.ok({ ...row.serialize(), already_exists: true, date_iso: todayISO })
+        if (row)
+          return response.ok({ ...row.serialize(), already_exists: true, date_iso: todayISO })
       }
 
       // sinon on laisse remonter l'erreur (500) pour debug
