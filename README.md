@@ -26,6 +26,7 @@ Application web permettant aux utilisateurs de **créer des objectifs**, les **d
 
 ---
 La doc API: [docs/API.md](docs/API.md) (routes Auth / Goals / Steps / Habits / Logs / Dashboard)
+
 La schéma BDD: [docs/DB.md](docs/DB.md)
 ## 1. Description
 
