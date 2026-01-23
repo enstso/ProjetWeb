@@ -716,16 +716,9 @@ Liste des logs dans une période.
 
 ---
 
-## POST /habits/:id/logs (protégé) — legacy / à éviter
-
-⚠️ Route présente mais non utilisée par le frontend actuel.
-Elle renvoie la liste des logs (équivalent à `GET /habits/:id/logs`).
-
-**Recommandation**
-
-* Soit la supprimer pour éviter la confusion
-* Soit garder uniquement `GET /habits/:id/logs`
-
+## POST /habits/:id/logs (protégé) 
+- Crée un log "aujourd’hui" (timezone gérée côté backend via X-Timezone)
+- Idempotent (peut renvoyer already_exists=true)
 ---
 
 # 6) Stats Habitudes
