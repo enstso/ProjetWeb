@@ -71,6 +71,13 @@ export default function GoalDetail() {
     });
 
     /**
+     * Règle métier (UX):
+     * - On autorise la complétion seulement si la progression est à 100%.
+     * - Exception: si l’objectif n’a aucune step (total = 0), on autorise (à toi de décider).
+     */
+    const canComplete = progress === 100 || progressMeta.total === 0;
+
+    /**
      * Recharge toutes les données nécessaires :
      * - Détails de l’objectif
      * - Progression calculée à partir des steps
@@ -95,7 +102,6 @@ export default function GoalDetail() {
             setProgress(p.progress_percent);
             setProgressMeta({total: p.total_steps, done: p.completed_steps});
         } catch (e) {
-
             // @ts-expect-error - on récupère un message backend si présent
             setErr(e?.response?.data?.message ?? "Impossible de charger l’objectif.");
         } finally {
@@ -113,11 +119,14 @@ export default function GoalDetail() {
 
     /**
      * Action : marquer l’objectif comme complété
+     * - Bloque côté UI si progress < 100% (ou steps manquantes)
      * - Met à jour l’état local "goal"
-     * - (Optionnel) tu pourrais aussi appeler refresh() si tu veux recharger progress
      */
     async function onCompleteGoal() {
         if (!id) return;
+
+        // ✅ garde-fou (au cas où) : évite d’appeler l’API si pas autorisé
+        if (!canComplete) return;
 
         try {
             const updated = await completeGoal(id);
@@ -151,7 +160,7 @@ export default function GoalDetail() {
     /**
      * États UI de chargement / erreur / absence d’objectif
      */
-    if (loading) return <div className="p-4 sm:p-6 text-sm text-zinc-600">Chargement...</div>;
+    if (loading && !goal) return <div className="p-4 sm:p-6 text-sm text-zinc-600">Chargement...</div>;
     if (err) return <div className="p-4 sm:p-6 text-sm text-red-700">{err}</div>;
     if (!goal) return null;
 
@@ -208,9 +217,18 @@ export default function GoalDetail() {
 
                         {/* CTA : compléter l’objectif */}
                         {goal.status !== "completed" ? (
-                            <Button className="w-full" onClick={onCompleteGoal}>
-                                Marquer l’objectif comme complété
-                            </Button>
+                            <>
+                                <Button className="w-full" onClick={onCompleteGoal} disabled={!canComplete}>
+                                    Marquer l’objectif comme complété
+                                </Button>
+
+                                {!canComplete ? (
+                                    <div
+                                        className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                                        Termine toutes les étapes (100%) pour pouvoir compléter l’objectif.
+                                    </div>
+                                ) : null}
+                            </>
                         ) : (
                             <div
                                 className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
@@ -236,11 +254,7 @@ export default function GoalDetail() {
                                 </Button>
                             </Link>
 
-                            <Button
-                                variant="secondary"
-                                onClick={onDelete}
-                                className="w-full sm:w-auto"
-                            >
+                            <Button variant="secondary" onClick={onDelete} className="w-full sm:w-auto">
                                 Supprimer
                             </Button>
                         </div>
@@ -248,11 +262,11 @@ export default function GoalDetail() {
                 </Card>
 
                 {/* Steps : gestion des étapes (add/edit/toggle/delete) */}
-                <StepsPanel goalId={goal.id}/>
+                <StepsPanel goalId={goal.id} onChanged={refresh}/>
 
                 {/* Refresh manuel : utile pour recalculer la progression après actions sur steps */}
-                <Button variant="secondary" className="w-full" onClick={refresh}>
-                    Rafraîchir la progression
+                <Button variant="secondary" className="w-full" onClick={refresh} disabled={loading}>
+                    {loading ? "Rafraîchissement..." : "Rafraîchir la progression"}
                 </Button>
             </div>
         </div>

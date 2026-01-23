@@ -201,11 +201,32 @@ export default class GoalsController {
     const goal = await Goal.query().where('id', params.id).where('user_id', user.id).first()
     if (!goal) return response.notFound({ message: 'Goal introuvable' })
 
+    // 1) compter steps
+    const totalRow = await db.from('steps').where('goal_id', goal.id).count('* as total').first()
+    const doneRow = await db
+      .from('steps')
+      .where('goal_id', goal.id)
+      .where('is_completed', true)
+      .count('* as done')
+      .first()
+
+    const total = Number(totalRow?.total ?? 0)
+    const done = Number(doneRow?.done ?? 0)
+
+    // 2) si il y a des steps => il faut 100%
+    if (total > 0 && done < total) {
+      return response.badRequest({
+        message: `Impossible de compléter : ${done}/${total} étape(s) complétée(s).`,
+        total_steps: total,
+        completed_steps: done,
+      })
+    }
+
     goal.status = 'completed'
     goal.completedAt = DateTime.utc()
     await goal.save()
 
-    return goal
+    return response.ok(goal)
   }
 
   /**

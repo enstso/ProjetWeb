@@ -45,7 +45,7 @@ function normalizeLogDate(raw: string) {
 }
 
 export function HabitTrackingGrid({habitId}: { habitId: string | number }) {
-    const {getLogs, checkToday, uncheck} = useHabits();
+    const {getLogs} = useHabits();
 
     // Mois affiché dans la grille (curseur de navigation)
     const [monthCursor, setMonthCursor] = useState(() => startOfMonth(new Date()));
@@ -54,7 +54,6 @@ export function HabitTrackingGrid({habitId}: { habitId: string | number }) {
     // États UI
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState<string | null>(null);
-    const [busyToday, setBusyToday] = useState(false);
 
     // Date du jour (calculée une fois)
     const todayISO = useMemo(() => toLocalISODate(new Date()), []);
@@ -128,29 +127,6 @@ export function HabitTrackingGrid({habitId}: { habitId: string | number }) {
 
     // Le jour courant est-il coché ?
     const isTodayChecked = doneSet.has(todayISO);
-
-    async function onToggleToday() {
-        // Toggle : check/uncheck pour aujourd'hui, puis refresh
-        setBusyToday(true);
-        setErr(null);
-        try {
-            if (!isTodayChecked) {
-                // Coche aujourd'hui côté API
-                await checkToday(habitId);
-            } else {
-                // Décoche aujourd'hui côté API
-                await uncheck(habitId, todayISO);
-            }
-            await refresh();
-        } catch (e) {
-            // Gestion d'erreur (message backend si disponible)
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            setErr(e?.response?.data?.message ?? "Action impossible.");
-        } finally {
-            setBusyToday(false);
-        }
-    }
 
     return (
         <Card>
@@ -263,14 +239,6 @@ export function HabitTrackingGrid({habitId}: { habitId: string | number }) {
               </span>
                         </p>
                     </div>
-
-                    {/* Bouton check/uncheck du jour */}
-                    <Button
-                        onClick={onToggleToday}
-                        disabled={busyToday || loading} // Désactivé pendant chargement/action
-                    >
-                        {busyToday ? "..." : isTodayChecked ? "Uncheck" : "Check"}
-                    </Button>
                 </div>
 
                 {/* Indicateur de chargement */}

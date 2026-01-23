@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { Button } from "../ui/Button";
-import { Input } from "../ui/Input";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/Card";
-import { useSteps, type Step } from "../../hooks/useSteps";
-import { useToast } from "../ui/Toast";
-import { pickMotivation } from "../../utils/motivation";
+import React, {useEffect, useState} from "react";
+import {Button} from "../ui/Button";
+import {Input} from "../ui/Input";
+import {Card, CardHeader, CardTitle, CardDescription, CardContent} from "../ui/Card";
+import {useSteps, type Step} from "../../hooks/useSteps";
+import {useToast} from "../ui/Toast";
+import {pickMotivation} from "../../utils/motivation";
 
 /**
  * Panel UI pour gérer les étapes (steps) d’un objectif :
@@ -13,12 +13,15 @@ import { pickMotivation } from "../../utils/motivation";
  * - toggle complété (check / uncheck)
  * - feedback utilisateur via toasts
  */
-export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
+export function StepsPanel({goalId, onChanged}: Readonly<{
+    goalId: string | number,
+    onChanged?: () => void | Promise<void>
+}>) {
     /**
      * Hook métier qui encapsule les appels API (CRUD steps)
      * + loading/error global + helper isDone() (snake_case/camelCase).
      */
-    const { loading, error, listSteps, addStep, updateStep, deleteStep, isDone } = useSteps();
+    const {loading, error, listSteps, addStep, updateStep, deleteStep, isDone} = useSteps();
 
     /** Liste des steps affichées dans le panel */
     const [steps, setSteps] = useState<Step[]>([]);
@@ -38,7 +41,7 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
     const [busyStepId, setBusyStepId] = useState<number | null>(null);
 
     /** Toasts (succès/info/erreur) pour feedback immédiat */
-    const { push } = useToast();
+    const {push} = useToast();
 
     /**
      * Recharge la liste des steps côté API et met à jour le state local.
@@ -56,6 +59,7 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
             });
         }
     }
+
 
     /**
      * Au montage du composant (et à chaque changement de goalId),
@@ -90,6 +94,9 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
             setSteps((prev) => [...prev, created]);
             setNewTitle("");
             setNewDeadline("");
+
+            // ✅ Notifie le parent (progression)
+            await onChanged?.();
 
             push({
                 type: "success",
@@ -138,6 +145,9 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
             setSteps((prev) => prev.map((s) => (s.id === editId ? updated : s)));
             setEditId(null);
 
+            // ✅ Notifie le parent (progression)
+            await onChanged?.();
+
             push({
                 type: "success",
                 title: "Modifications enregistrées ✅",
@@ -171,6 +181,9 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
             });
 
             setSteps((prev) => prev.map((s) => (s.id === step.id ? updated : s)));
+
+            // ✅ Notifie le parent (progression) immédiatement après le toggle
+            await onChanged?.();
 
             if (!done) {
                 push({
@@ -210,6 +223,9 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
         try {
             await deleteStep(id);
             setSteps((prev) => prev.filter((s) => s.id !== id));
+
+            // ✅ Notifie le parent (progression)
+            await onChanged?.();
 
             push({
                 type: "success",
@@ -274,7 +290,8 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
                                      * Le disabled sur les boutons empêche double-submit.
                                      */
                                     <div className="space-y-3">
-                                        <Input label="Titre" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                                        <Input label="Titre" value={editTitle}
+                                               onChange={(e) => setEditTitle(e.target.value)}/>
                                         <Input
                                             label="Deadline (optionnel)"
                                             type="date"
@@ -283,7 +300,8 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
                                         />
 
                                         <div className="flex gap-2">
-                                            <Button className="w-full" onClick={onSaveEdit} disabled={busyStepId === editId}>
+                                            <Button className="w-full" onClick={onSaveEdit}
+                                                    disabled={busyStepId === editId}>
                                                 Enregistrer
                                             </Button>
                                             <Button
@@ -306,7 +324,8 @@ export function StepsPanel({ goalId }: Readonly<{ goalId: string | number }>) {
                                                 {s.title}
                                             </p>
                                             <p className="mt-1 text-xs text-zinc-500">
-                                                Deadline: <span className="font-medium text-zinc-700">{s.deadline ?? "—"}</span>
+                                                Deadline: <span
+                                                className="font-medium text-zinc-700">{s.deadline ?? "—"}</span>
                                             </p>
                                         </div>
 
